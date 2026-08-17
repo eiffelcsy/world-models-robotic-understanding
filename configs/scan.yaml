@@ -1,0 +1,18 @@
+# Input to scripts/make_manifest.py. Scans a world model's output directory and
+# writes a manifest. Expected layout:
+#
+#   run_dir/<probe_name>/<sample_id>.mp4
+#   frames_dir/<sample_id>.png
+#
+# Video stems may be prefixed (e.g. "<probe>__<sample_id>"); the suffix is matched.
+root: ..
+
+run_dir: ../veo/runs/pilot
+frames_dir: ../veo/runs/pilot/frames
+output: configs/manifest.yaml
+
+# null = every subdirectory of run_dir is treated as a probe.
+probes: null
+
+video_ext: .mp4
+frame_ext: .png

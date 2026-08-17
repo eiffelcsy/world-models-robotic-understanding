@@ -1,0 +1,4 @@
+# Extra dependencies for this probe only; the pipeline itself needs none of them.
+#   pip install -r modules/instance_seg/requirements.txt
+torch>=2.4
+transformers>=4.58        # first release carrying SAM 3 (facebook/sam3) — verify

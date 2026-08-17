@@ -1,0 +1,23 @@
+# Run configuration. Everything the pipeline needs lives in YAML; the CLI only
+# takes --config. Paths resolve against `root`, which is relative to this file.
+root: ..
+
+manifest: configs/manifest.yaml
+output_dir: results/latest
+
+# Pseudo ground truth is stored under `<gt_dir>/<probe>_gt/`, one .npz per sample
+# plus a .png of it. A sample that already has a file there is not recomputed;
+# to regenerate, delete the directory or run the module's preview.
+gt_dir: results
+
+# Probes are discovered here: every subdirectory holding a probe.yaml.
+modules_dir: modules
+modules:
+  include: ["*"]   # name globs, e.g. ["depth_*", "contact_detection"]
+  exclude: []      # or set `enabled: false` in a module's probe.yaml
+
+# null = every sample in the manifest. Set a small number for a smoke run.
+limit: null
+
+# false: a failing sample is recorded and the run continues.
+fail_fast: false

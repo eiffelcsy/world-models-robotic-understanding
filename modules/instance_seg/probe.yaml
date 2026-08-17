@@ -1,0 +1,62 @@
+name: instance_seg
+description: >
+  Every object in the conditioning frame repainted in its own flat color.
+  Ground truth is SAM 3 run on the input frame; the model never sees it.
+
+enabled: true
+
+# The predetermined frame: chosen without ever seeing the ground truth, so its
+# scores are the deployable ones. `last_frame` is the paper's, and takes the
+# clip's final frame; `most_static` (params: window_s) takes the quietest frame
+# of the tail window instead, which survives a clip that ends mid-flicker.
+readout:
+  type: last_frame
+  params:
+    back_off: 1       # 1 = the final frame; raise it to back off from the end
+
+# The oracle frame, reported alongside as `best_<metric>`: the best any frame of
+# the clip reaches, chosen by the ground truth. Veo keeps animating after the
+# task is done, so this is usually well above the readout frame — the gap is the
+# readout's loss, not the model's. An upper bound; label it as one.
+best_frame:
+  enabled: true
+  rank_by: mean_iou   # the score maximised over frames
+  stride: 1           # every frame; raise it to trade resolution for time
+  # The opening frames are still the conditioning frame, so any score there is
+  # won by scene color the model never painted. Don't let the oracle pick them.
+  start_index: 5
+
+ground_truth:
+  type: sam3_instances
+  params:
+    model_id: facebook/sam3
+    device: null            # null -> cuda when torch sees one, else cpu
+    dtype: float32
+
+    prompt: ["object on table", "robot arm"]
+    prompt_key: gt_prompt
+
+    score_threshold: 0.5
+    mask_threshold: 0.5
+
+    # Drop specks and any mask covering most of the frame (table, floor, wall).
+    min_area_frac: 0.001
+    max_area_frac: 0.2
+
+    dedup_iou: 0.8
+    max_instances: 20
+    min_instances: 1
+
+extractor:
+  type: color_instances
+  params:
+    min_saturation: 0.80
+    min_area_frac: 0.001
+    max_area_frac: 0.1
+
+    max_instances: 20
+
+metrics:
+  - type: instance_match_iou
+    params:
+      iou_threshold: 0.5

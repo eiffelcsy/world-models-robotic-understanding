@@ -1,0 +1,32 @@
+# Sample manifest: the one file that knows a specific world model's output layout.
+# Generate it with `python scripts/make_manifest.py --config configs/scan.yaml`,
+# or write it by hand. Paths resolve against `root` (relative to this file).
+root: ..
+
+samples:
+  - sample_id: AUTOLab_0d4edc83_2023-10-27-20h-35m-28s__ext1_f000021
+    # The frame the world model was conditioned on. All ground truth derives from it.
+    input_frame: ../veo/runs/pilot/frames/AUTOLab+0d4edc83+2023-10-27-20h-35m-28s__ext1_f000021.png
+
+    # One generated video per probe. Use "*" for a single video every probe reads.
+    videos:
+      depth_perception: ../veo/runs/pilot/depth_perception/AUTOLab..._f000021.mp4
+      instance_seg: ../veo/runs/pilot/instance_seg/AUTOLab..._f000021.mp4
+      robot_keypoint: ../veo/runs/pilot/robot_keypoint/AUTOLab..._f000021.mp4
+      contact_detection: ../veo/runs/pilot/contact_detection/AUTOLab..._f000021.mp4
+
+    # Precomputed pseudo ground truth, keyed by whatever the probe's gt source asks for.
+    # Omit any key whose probe derives its ground truth in-pipeline instead.
+    gt_assets:
+      depth: gt/AUTOLab..._f000021_depth.npy
+      instances: gt/AUTOLab..._f000021_instances.png
+      keypoints: gt/AUTOLab..._f000021_keypoints.json
+      contact: gt/AUTOLab..._f000021_contact.png
+
+    # Free-form; carried into results for slicing scores by task, lab, or scene.
+    meta:
+      episode: AUTOLab+0d4edc83+2023-10-27-20h-35m-28s
+      camera: ext1
+      frame_index: 21
+      task: move object into or out of container
+      instruction: put the red block in the bowl

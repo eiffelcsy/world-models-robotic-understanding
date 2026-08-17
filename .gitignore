@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.pyc
+
+# Generated
+results/
+configs/manifest.yaml
