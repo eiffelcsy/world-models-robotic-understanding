@@ -35,11 +35,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from . import registry
+from wmcore import registry
+from wmcore.utils import read_image, resize_to
+from wmcore.video import iter_frames
+
 from .config import ProbeConfig
 from .types import ProbeData, Result, RunContext, Sample
-from .utils import read_image, resize_to
-from .video import iter_frames
 
 
 @dataclass

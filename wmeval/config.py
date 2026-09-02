@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import yaml
+from wmcore.config import read_yaml, resolver, root_of
 
 from .modules import PROBE_FILE, discover
 
@@ -46,17 +46,9 @@ class EvalConfig:
     root: Path = Path(".")
 
 
-def _read_yaml(path: Path) -> dict[str, Any]:
-    with open(path, "r", encoding="utf-8") as handle:
-        data = yaml.safe_load(handle) or {}
-    if not isinstance(data, dict):
-        raise ValueError(f"{path}: expected a mapping at the top level")
-    return data
-
-
 def load_probe_config(module_dir: Path) -> ProbeConfig:
     path = module_dir / PROBE_FILE
-    raw = _read_yaml(path)
+    raw = read_yaml(path)
     missing = [k for k in ("ground_truth", "extractor", "metrics") if k not in raw]
     if missing:
         raise ValueError(f"{path}: probe config is missing {missing}")
@@ -77,12 +69,9 @@ def load_probe_config(module_dir: Path) -> ProbeConfig:
 
 def load_eval_config(path: str | Path) -> EvalConfig:
     path = Path(path).resolve()
-    raw = _read_yaml(path)
-    root = (path.parent / raw.get("root", "..")).resolve()
-
-    def resolve(value: str) -> Path:
-        candidate = Path(value)
-        return candidate if candidate.is_absolute() else (root / candidate).resolve()
+    raw = read_yaml(path)
+    root = root_of(path, raw)
+    resolve = resolver(root)
 
     modules_dir = resolve(raw.get("modules_dir", "modules"))
     selection = raw.get("modules") or {}

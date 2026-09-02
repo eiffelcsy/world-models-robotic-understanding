@@ -1,0 +1,80 @@
+name: instance_seg
+description: >
+  Every object in the conditioning frame repainted in its own flat, fully
+  saturated color, then held still. This is the asking half of the convention
+  extractor.py decodes — change one and change the other, or the probe scores a
+  model failure that is really a wiring failure.
+
+enabled: true
+
+prompt:
+  type: template
+  params:
+    # What the decoder actually needs, and why each clause is here:
+    #
+    #   flat, fully saturated       extractor.py picks colors off the hue
+    #                               histogram above min_saturation: 0.80, so a
+    #                               pastel or shaded fill decodes as scene.
+    #   a different color each      instances are separated by hue distance;
+    #                               two objects the same color merge into one.
+    #   not white, black or grey    hue is undefined there. Those objects are
+    #                               invisible to this decoder by construction —
+    #                               the prompt is the only place to prevent it.
+    #   camera does not move        ground truth comes from the input frame's
+    #                               pixel grid, so a pan makes every mask wrong.
+    #   then hold                   the readout takes a tail frame. Veo tends to
+    #                               keep animating past task completion, which
+    #                               is the gap `best_frame` measures.
+    text: |
+      The camera is locked off on a tripod and does not move, pan, zoom or shake.
+      Nothing in the scene moves.
+
+      Over the first few seconds, repaint every distinct physical object in the
+      scene — each item on the table, each container, the robot arm — so that each
+      one becomes a single flat, uniform, fully saturated block of color covering
+      exactly that object's silhouette and nothing else. Give every object a
+      clearly different color from its neighbours: vivid red, green, blue, yellow,
+      cyan, magenta, orange, purple. Do not use white, black, grey or any pale or
+      washed-out color. No shading, no texture, no gradients, no highlights, no
+      outlines, no labels or text.
+
+      Leave the table surface, the floor, the walls and the background completely
+      unpainted and unchanged.
+
+      Once every object is filled in, hold the result perfectly still and
+      unchanged for the remainder of the {duration_s} seconds. Do not continue
+      animating, do not fade, do not recolor anything after it is filled.
+
+    negative: >
+      camera motion, panning, zooming, handheld shake, moving objects, shading,
+      gradients, textures, highlights, outlines, edges, text, labels, captions,
+      pale colors, pastel colors, white overlay, black overlay, grey overlay,
+      transparency, fading
+
+    # Meta keys the template must have. Empty: this prompt describes the
+    # convention and needs nothing about the particular scene. A probe whose
+    # text says "{instruction}" would list it here, so a frame missing it fails
+    # in --dry-run rather than sending a prompt with a hole in it.
+    requires: []
+
+# What to ask the backend for. The backend's own defaults fill anything omitted,
+# and configs/gen.yaml overrides both — so a smoke run can shorten every clip
+# without touching this file. {duration_s} above tracks whatever wins.
+video:
+  duration_s: 8
+  aspect_ratio: "16:9"
+  resolution: 720p
+
+# Not a score — that is the eval pipeline's job, with ground truth. These only
+# decide whether the file is worth putting in the manifest at all.
+checks:
+  - type: playable
+    params:
+      min_frames: 24        # a truncated clip is valid mp4 and useless
+  - type: changed
+    params:
+      # Reported, not enforced: a model that ignored the prompt returns the
+      # conditioning frame held still, and for this probe that does not score
+      # zero — it scores whatever the scene's own saturated colors earn (see
+      # "Calibrating the extractor" in README.md). Worth seeing in the summary.
+      min_change: 0.0

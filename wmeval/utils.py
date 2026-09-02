@@ -1,64 +1,13 @@
-"""Image and array IO shared by the pipeline."""
+"""Image and array IO. Lives in `wmcore`, shared with wmgen; re-exported here so
+that `from wmeval.utils import ...` keeps working for probe modules."""
 
-from __future__ import annotations
+from wmcore.utils import (  # noqa: F401
+    dump_json,
+    ensure_dir,
+    load_json,
+    read_image,
+    resize_to,
+    write_image,
+)
 
-import json
-from pathlib import Path
-from typing import Any
-
-import cv2
-import numpy as np
-
-
-def ensure_dir(path: Path) -> Path:
-    path.mkdir(parents=True, exist_ok=True)
-    return path
-
-
-def read_image(path: str | Path) -> np.ndarray:
-    """Read an image as RGB uint8."""
-    image = cv2.imread(str(path), cv2.IMREAD_COLOR)
-    if image is None:
-        raise FileNotFoundError(f"could not read image: {path}")
-    return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-
-def write_image(path: str | Path, image: np.ndarray) -> None:
-    path = Path(path)
-    ensure_dir(path.parent)
-    cv2.imwrite(str(path), cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
-
-
-def load_json(path: str | Path) -> Any:
-    with open(path, "r", encoding="utf-8") as handle:
-        return json.load(handle)
-
-
-def dump_json(path: str | Path, obj: Any) -> None:
-    path = Path(path)
-    ensure_dir(path.parent)
-    with open(path, "w", encoding="utf-8") as handle:
-        json.dump(obj, handle, indent=2, sort_keys=True, default=_json_default)
-
-
-def _json_default(obj: Any) -> Any:
-    if isinstance(obj, (np.floating, np.integer)):
-        return obj.item()
-    if isinstance(obj, np.ndarray):
-        return obj.tolist()
-    if isinstance(obj, Path):
-        return str(obj)
-    raise TypeError(f"not JSON serialisable: {type(obj)}")
-
-
-def resize_to(array: np.ndarray, shape: tuple[int, int], *, nearest: bool = False) -> np.ndarray:
-    """Resize (H, W[, C]) to `shape` = (H, W). Nearest for labels and masks."""
-    if array.shape[:2] == tuple(shape):
-        return array
-    interp = cv2.INTER_NEAREST if nearest else cv2.INTER_LINEAR
-    source = array
-    cast_back = None
-    if source.dtype == bool:
-        source, cast_back = source.astype(np.uint8), bool
-    resized = cv2.resize(source, (shape[1], shape[0]), interpolation=interp)
-    return resized.astype(cast_back) if cast_back else resized
+__all__ = ["dump_json", "ensure_dir", "load_json", "read_image", "resize_to", "write_image"]

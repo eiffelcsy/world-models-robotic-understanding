@@ -1,0 +1,33 @@
+# Clips that already exist, adopted into the run layout.
+#
+# No API, no key, no cost. It is the backend to reach for when:
+#
+#   - the model has only a web UI and the clips arrive by hand;
+#   - a run was interrupted and the vendor delivered the clip anyway — this
+#     pipeline does not resume a job, so adopting is how that output is
+#     recovered instead of paid for twice;
+#   - you are testing a change and want the whole chain, generation through
+#     manifest through scoring, to run offline in seconds.
+#
+# A frame with no matching file is `skipped`, not an error, so a half-filled
+# directory works and fills in over time.
+
+name: local
+type: local_dir
+
+params:
+  # Where the existing clips are. Resolved against the run config's `root`, like
+  # every other path in the repo; an absolute path also works.
+  root: ../veo/runs/pilot
+
+  # How they are named under `root`. {probe} and {sample_id} are the only fields.
+  pattern: "{probe}/{sample_id}.mp4"
+
+  # true symlinks instead of copying, for a large directory you do not want a
+  # second copy of. The manifest then points at the link.
+  link: false
+
+defaults:
+  duration_s: 8
+  aspect_ratio: "16:9"
+  resolution: 720p

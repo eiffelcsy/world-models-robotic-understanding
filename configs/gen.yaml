@@ -1,0 +1,58 @@
+# Generation configuration. Everything the pipeline needs lives in YAML; the CLI
+# only takes --config and a few run-time switches. Paths resolve against `root`,
+# which is relative to this file.
+root: ..
+
+# Where the conditioning frames come from. `frames_dir` globs a directory and
+# takes the sample id from each file stem — which is how the manifest, the clip
+# store and the ground-truth store all name that sample, so the three stay
+# findable from each other. `frame_list` reads an explicit list instead.
+frames:
+  type: frames_dir
+  params:
+    path: ../droid/frames
+    pattern: "*.png"
+    # Optional per-sample metadata, carried through to the manifest and
+    # available to prompt templates as {placeholders}:
+    #   meta:
+    #     AUTOLab_..._f000021: {task: "put the red block in the bowl"}
+    meta_file: null
+
+# Which world model. Names a directory under `backends/` holding a backend.yaml.
+# `local` adopts clips that already exist and costs nothing — start there.
+backend: local
+
+# Clips land at <clips_dir>/<probe>/<sample_id>.mp4, with a .json beside each
+# recording the prompt that produced it. A clip already there is NOT generated
+# again; regenerating is deleting the file, or --refresh.
+clips_dir: clips
+
+# Reports go here; the manifest goes where run_eval.py expects to find it.
+output_dir: results/gen
+manifest_out: configs/manifest.yaml
+
+# Probes are discovered here: every subdirectory holding a prompt.yaml. A module
+# with only probe.yaml is eval-only and is not generated for.
+modules_dir: modules
+backends_dir: backends
+modules:
+  include: ["*"]   # name globs, e.g. ["instance_seg"]
+  exclude: []      # or set `enabled: false` in a module's prompt.yaml
+
+# Run-level override of what to ask for, highest precedence of the three
+# (backend defaults < prompt.yaml < here). Shorten every clip for a smoke run:
+#   video: {duration_s: 4}
+video: {}
+
+# null = every frame the source yields. Set a small number before a paid run.
+limit: null
+
+# Render every prompt and write the manifest that would result, calling no
+# backend. The cost guardrail, and where a broken template is meant to fail.
+dry_run: false
+
+# Regenerate clips that already exist. Costs money; it is not the default.
+refresh: false
+
+# false: a failing clip is recorded and the run continues.
+fail_fast: false

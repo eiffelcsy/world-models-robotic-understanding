@@ -6,6 +6,8 @@ import logging
 import time
 from pathlib import Path
 
+from wmcore.utils import dump_json, ensure_dir
+
 from . import video  # noqa: F401  (imported for its readout registrations)
 from .config import EvalConfig, load_eval_config
 from .manifest import load_manifest
@@ -13,7 +15,6 @@ from .modules import import_module
 from .probe import Probe
 from .report import write_report
 from .types import Result, RunContext
-from .utils import dump_json, ensure_dir
 
 log = logging.getLogger("wmeval")
 

@@ -5,8 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 from statistics import mean, pstdev
 
+from wmcore.utils import dump_json
+
 from .types import Result
-from .utils import dump_json
 
 
 def aggregate(results: list[Result]) -> dict[str, dict]:

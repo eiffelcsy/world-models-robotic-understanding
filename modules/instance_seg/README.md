@@ -8,6 +8,26 @@ All four stages are written and `probe.yaml` ships enabled. The extractor's
 saturation thresholds are the part still worth calibrating — see
 [Calibrating the extractor](#calibrating-the-extractor).
 
+## The two halves
+
+| file | pipeline | says |
+|---|---|---|
+| [prompt.yaml](prompt.yaml) | wmgen | repaint each object in its own flat, fully saturated color, then hold still |
+| [probe.yaml](probe.yaml) | wmeval | decode those colors back into instances and score them against SAM 3 |
+
+They are one convention written twice, and they change together. `prompt.yaml`
+is commented clause by clause with the extractor param each clause exists to
+satisfy — "fully saturated" is there because `min_saturation` is 0.80, "a
+different color each" because instances are separated by hue distance, "not
+white, black or grey" because hue is undefined there and no threshold can
+recover it.
+
+Render the prompts without generating anything:
+
+```bash
+python scripts/run_gen.py --config configs/gen.yaml --dry-run
+```
+
 ## Install
 
 Torch and transformers are needed by this probe only, and are kept out of the

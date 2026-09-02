@@ -3,23 +3,17 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 
+from wmcore.components import Component
+from wmcore.utils import plain as _plain
+from wmcore.utils import safe_name as _safe_name
+from wmcore.utils import write_image
+
 from .types import ProbeData, RunContext, Sample
-from .utils import write_image
 
 log = logging.getLogger("wmeval")
-
-
-class Component:
-    """Constructed from a YAML `params` block; every param becomes an attribute."""
-
-    def __init__(self, **params) -> None:
-        self.params = params
-        for key, value in params.items():
-            setattr(self, key, value)
 
 
 class GroundTruthSource(Component):
@@ -146,11 +140,3 @@ def load_probe_data(path: Path) -> ProbeData:
     return ProbeData(kind, payload, info)
 
 
-def _plain(params: dict[str, Any]) -> dict[str, Any]:
-    """Params as they survive a trip through the file, so the two compare equal."""
-    return json.loads(json.dumps(params, sort_keys=True, default=str))
-
-
-def _safe_name(sample_id: str) -> str:
-    """A sample id as a filename. Ids come from frame stems, so this rarely bites."""
-    return "".join(c if c.isalnum() or c in "-_.+=" else "_" for c in sample_id)

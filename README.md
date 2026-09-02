@@ -1,13 +1,31 @@
 # world-models-robotic-understanding
 
-`wmeval` — a probe-based evaluation pipeline for video generative world models.
+Two pipelines and a probe library, for asking video generative world models what
+they understand about a robot's scene.
 
-A video model can only answer in pixels, so every question about a scene is posed
-as something that happens on screen: "how far away is everything?" becomes "the
-photograph is replaced by a depth map." This pipeline scores what came back.
+A video model can only answer in pixels, so every question about a scene is
+posed as something that happens on screen: "how far away is everything?" becomes
+"the photograph is replaced by a depth map."
 
-It is model-agnostic. It takes generated videos plus the frames they were
-conditioned on, and never touches the generator.
+- **`wmgen`** asks the question. Conditioning frames plus a per-probe prompt in,
+  generated clips plus a manifest out.
+- **`wmeval`** scores what came back. Generated videos plus the frames they were
+  conditioned on in, numbers out.
+
+Both are model-agnostic, by opposite routes. `wmeval` never touches a generator
+at all. `wmgen` must call one, so a world model there is a
+`backends/<name>/backend.yaml` file rather than code — adding Veo, Kling, a
+self-hosted checkpoint or a directory of clips made by hand is configuration.
+
+```
+conditioning frames ──wmgen──▶ clips + manifest ──wmeval──▶ scores
+                        ▲                            ▲
+              modules/<probe>/prompt.yaml   modules/<probe>/probe.yaml
+```
+
+A probe owns both halves of its convention, in one directory: the prompt that
+asks for an appearance change, and the extractor that decodes it. They change
+together or the probe measures nothing.
 
 ---
 
@@ -18,21 +36,29 @@ python -m venv venv
 venv/Scripts/python.exe -m pip install -r requirements.txt
 ```
 
-1. **Add a probe.** One directory under `modules/`, holding a `probe.yaml` plus
-   the code it names. See [modules/\_\_init\_\_.py](modules/__init__.py) for the
-   layout and a registration example.
+1. **Add a probe.** One directory under `modules/`, holding a `probe.yaml`, a
+   `prompt.yaml` and the code they name. See
+   [modules/\_\_init\_\_.py](modules/__init__.py) for the layout and a
+   registration example. A directory with only `probe.yaml` is eval-only; only
+   `prompt.yaml`, generation-only.
 
-2. **Point at your videos.** Edit `configs/scan.yaml`, then:
+2. **Generate.** Point `configs/gen.yaml` at your frames and pick a backend,
+   then:
 
    ```bash
-   python scripts/make_manifest.py --config configs/scan.yaml
+   python scripts/run_gen.py --config configs/gen.yaml --dry-run
+   python scripts/run_gen.py --config configs/gen.yaml
    ```
 
-   It scans `run_dir/<probe>/<sample_id>.mp4` against `frames_dir/<sample_id>.png`
-   and writes `configs/manifest.yaml`. Hand-write it instead if your layout
-   differs — see [configs/manifest.example.yaml](configs/manifest.example.yaml).
+   The dry run renders every prompt and writes the manifest that would result
+   without calling any backend. Generation costs money; do it first. Clips land
+   in `clips_dir` and the manifest at `manifest_out`.
 
-3. **Run.**
+   Already have videos? Use the `local` backend to adopt them, or hand-write the
+   manifest — see [configs/manifest.example.yaml](configs/manifest.example.yaml)
+   and `scripts/make_manifest.py`.
+
+3. **Evaluate.**
 
    ```bash
    python scripts/run_eval.py --config configs/eval.yaml
@@ -41,12 +67,11 @@ venv/Scripts/python.exe -m pip install -r requirements.txt
    Results land in `output_dir`: `summary.md`, `summary.json`, `scores.csv`
    (one row per sample and probe), and `results.json` with full records.
 
-`python scripts/run_eval.py --list-components` prints everything your modules
-have registered.
+`--list-components` on either script prints everything registered.
 
 ---
 
-## The pipeline
+## The evaluation pipeline
 
 For each probe, on each sample:
 
@@ -85,26 +110,52 @@ before scoring so a mis-wired `probe.yaml` raises rather than producing a number
 that means nothing. A failing sample is recorded and the run continues; set
 `fail_fast: true` to stop on the first error.
 
+## The generation pipeline
+
+The mirror image, and it borrows the same mechanisms — a registry of named
+components, plugin directories discovered by a marker file, YAML-only configs, a
+store that makes reruns free. See [wmgen/README.md](wmgen/README.md); the short
+version is that generated clips are cached exactly as ground truth is, because
+this is that pipeline's expensive stage, and that a clip already on disk is never
+made again.
+
 ---
 
 ## Layout
 
 ```
 configs/
-  eval.yaml              the run: manifest, output, ground-truth store, which modules
+  gen.yaml               the generation run: frames, backend, output, which modules
+  eval.yaml              the evaluation run: manifest, output, ground-truth store
   scan.yaml              input to make_manifest.py
   manifest.example.yaml  what a manifest looks like
-modules/                 one directory per probe  <- add and remove probes here
+modules/                 one directory per probe   <- add and remove probes here
+  <probe>/probe.yaml       how to score it
+  <probe>/prompt.yaml      what to ask for
+backends/                one directory per world model  <- add models here
+wmcore/                  what both pipelines are built from
+  registry.py            name -> component lookup
+  modules.py             plugin discovery and import
+  manifest.py            the schema the two halves agree on
+  config.py, utils.py, video.py, components.py
+wmgen/
+  types.py               Frame, Prompt, Request, Clip, GenContext
+  components.py          FrameSource, PromptBuilder, VideoBackend, ClipCheck
+  sources.py             where frames come from
+  prompt.py              template rendering
+  backends.py            http_job, command, local_dir
+  checks.py              is the clip usable
+  store.py               the clip store: cache, sidecars, prompt drift
+  task.py                the stages, per frame
+  runner.py, report.py, config.py
 wmeval/
   types.py               Sample, ProbeData, Result, RunContext
   components.py          GroundTruthSource, Extractor, Metric base classes
-  registry.py            name -> component lookup
-  modules.py             module discovery and import
   config.py              YAML -> config objects
   manifest.py            frames + videos + ground-truth assets
   video.py               readouts
   probe.py               the four stages, per sample
   runner.py              orchestration
   report.py              aggregation -> summary.md / summary.json / scores.csv
-scripts/                 run_eval.py, make_manifest.py
+scripts/                 run_gen.py, run_eval.py, make_manifest.py
 ```

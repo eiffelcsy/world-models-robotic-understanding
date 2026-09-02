@@ -20,20 +20,16 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-import yaml
+from wmcore.config import read_yaml, resolver, root_of
+from wmcore.manifest import write_manifest  # noqa: F401  (re-exported; the schema is shared)
 
 from .types import Sample
 
 
 def load_manifest(path: str | Path) -> list[Sample]:
     path = Path(path).resolve()
-    with open(path, "r", encoding="utf-8") as handle:
-        raw = yaml.safe_load(handle) or {}
-    root = (path.parent / raw.get("root", ".")).resolve()
-
-    def resolve(value: str | Path) -> Path:
-        candidate = Path(value)
-        return candidate if candidate.is_absolute() else (root / candidate).resolve()
+    raw = read_yaml(path)
+    resolve = resolver(root_of(path, raw, default="."))
 
     samples: list[Sample] = []
     for entry in raw.get("samples") or []:
@@ -101,10 +97,3 @@ def _match_frame(video_stem: str, frames: dict[str, Path]) -> str | None:
         if video_stem.endswith(sample_id):
             return sample_id
     return None
-
-
-def write_manifest(path: Path, manifest: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    payload = {k: v for k, v in manifest.items() if not k.startswith("_")}
-    with open(path, "w", encoding="utf-8") as handle:
-        yaml.safe_dump(payload, handle, sort_keys=False, default_flow_style=False)

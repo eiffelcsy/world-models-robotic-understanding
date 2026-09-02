@@ -1,7 +1,9 @@
 venv/
+.venv/
 __pycache__/
 *.pyc
 
 # Generated
 results/
+clips/
 configs/manifest.yaml

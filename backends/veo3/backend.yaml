@@ -1,0 +1,66 @@
+# Veo 3 through the Gemini API, as a generic HTTP job.
+#
+# Nothing about Veo is in wmgen's Python — this file is the whole integration,
+# and pointing the pipeline at a different vendor is writing a different one of
+# these. Strings anywhere below are templated with the request: {prompt},
+# {negative}, {image_b64}, {image_mime}, {sample_id}, and every video param
+# ({duration_s}, {aspect_ratio}, {resolution}, {seed}). `poll` and `fetch` also
+# see {job_id}. A string that is exactly one placeholder keeps that value's
+# type, so a number stays a number; a key whose value resolves to null is
+# dropped from the request rather than sent as null.
+#
+# VERIFY THIS AGAINST CURRENT DOCS BEFORE A PAID RUN. The request and response
+# shapes below match the Gemini API's predictLongRunning video endpoint as
+# documented, but vendors move fields. `--dry-run` will not catch a wrong path
+# here; one clip with `limit: 1` will, and correcting it is an edit to this file
+# rather than to any code.
+
+name: veo3
+type: http_job
+
+params:
+  model_id: veo-3.0-generate-001
+
+  # Never a literal key. `${...}` is read from the environment and a missing
+  # variable is an error before any request is sent.
+  headers:
+    x-goog-api-key: "${GEMINI_API_KEY}"
+
+  submit:
+    url: https://generativelanguage.googleapis.com/v1beta/models/veo-3.0-generate-001:predictLongRunning
+    method: POST
+    body:
+      instances:
+        - prompt: "{prompt}"
+          image:
+            bytesBase64Encoded: "{image_b64}"
+            mimeType: "{image_mime}"
+      parameters:
+        aspectRatio: "{aspect_ratio}"
+        resolution: "{resolution}"
+        negativePrompt: "{negative}"
+        # Veo 3 generates a fixed-length clip, so duration is not sent — it is
+        # still declared in `defaults` below because the prompt text names it.
+    # Where the operation id is in the response: {"name": "models/.../operations/..."}
+    job_id_path: name
+
+  poll:
+    url: https://generativelanguage.googleapis.com/v1beta/{job_id}
+    method: GET
+    interval_s: 10
+    timeout_s: 900        # 15 min; a job still running after that is a failure
+    done_path: done
+    error_path: error
+
+  fetch:
+    # The finished operation carries a download URL, which needs the same key.
+    url_path: response.generateVideoResponse.generatedSamples[0].video.uri
+
+  retries: 3
+
+# What this model supports. A probe's prompt.yaml overrides these, and
+# configs/gen.yaml overrides both.
+defaults:
+  duration_s: 8
+  aspect_ratio: "16:9"
+  resolution: 720p
