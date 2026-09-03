@@ -1,67 +1,67 @@
 name: instance_seg
 description: >
-  Every object in the conditioning frame repainted in its own flat, fully
-  saturated color, then held still. This is the asking half of the convention
-  extractor.py decodes — change one and change the other, or the probe scores a
-  model failure that is really a wiring failure.
+  The objects relevant to this frame's task, masked one at a time
+  — one flat, fully saturated color each — then held still. Everything else
+  (the robot arm included) stays the untouched photograph. This is the asking
+  half of the convention extractor.py decodes — change one and change the
+  other, or the probe scores a model failure that is really a wiring failure.
 
 enabled: true
 
 prompt:
   type: template
   params:
-    # What the decoder actually needs, and why each clause is here:
-    #
-    #   flat, fully saturated       extractor.py picks colors off the hue
-    #                               histogram above min_saturation: 0.80, so a
-    #                               pastel or shaded fill decodes as scene.
-    #   a different color each      instances are separated by hue distance;
-    #                               two objects the same color merge into one.
-    #   not white, black or grey    hue is undefined there. Those objects are
-    #                               invisible to this decoder by construction —
-    #                               the prompt is the only place to prevent it.
-    #   camera does not move        ground truth comes from the input frame's
-    #                               pixel grid, so a pan makes every mask wrong.
-    #   then hold                   the readout takes a tail frame. Veo tends to
-    #                               keep animating past task completion, which
-    #                               is the gap `best_frame` measures.
     text: |
-      The camera is locked off on a tripod and does not move, pan, zoom or shake.
-      Nothing in the scene moves.
+      This photograph stays exactly as it is: same framing, same lighting, same
+      shadows, same photographic texture and grain. Nothing in it is redrawn,
+      restyled, simplified, flattened or re-lit. The scene geometry also stays
+      the same — no objects are added, removed or changed in any way.
 
-      Over the first few seconds, repaint every distinct physical object in the
-      scene — each item on the table, each container, the robot arm — so that each
-      one becomes a single flat, uniform, fully saturated block of color covering
-      exactly that object's silhouette and nothing else. Give every object a
-      clearly different color from its neighbours: vivid red, green, blue, yellow,
-      cyan, magenta, orange, purple. Do not use white, black, grey or any pale or
-      washed-out color. No shading, no texture, no gradients, no highlights, no
-      outlines, no labels or text.
+      The camera is locked off on a tripod and does not move, pan, zoom or
+      shake. Nothing in the scene moves.
 
-      Leave the table surface, the floor, the walls and the background completely
-      unpainted and unchanged.
+      One at a time, in immediate succession, an opaque colored mask appears on
+      top of each of these objects — {relevant_objects} — lying directly over
+      that object and covering it exactly. Each mask spreads outward from
+      inside the object until its edge sits precisely on that object's outline,
+      then stops, including at thin parts, handles and holes. Once a mask has
+      appeared, it stays unchanged for the rest of the clip.
 
-      Once every object is filled in, hold the result perfectly still and
-      unchanged for the remainder of the {duration_s} seconds. Do not continue
-      animating, do not fade, do not recolor anything after it is filled.
+      Everything not covered by a mask remains the untouched original
+      photograph: every other object in the scene, the robot arm, the table
+      surface, the floor, the walls, the background, and the shadows objects
+      cast onto that surface.
+
+      All masks are in place by {settle_s} seconds into the clip, after which the
+      frame is completely still for the remainder of the {duration_s} seconds.
+      Static locked-off camera, one continuous shot, no cut, no zoom, no pan,
+      no dolly, no camera shake, no text, no labels, no outlines, no watermark.
 
     negative: >
       camera motion, panning, zooming, handheld shake, moving objects, shading,
       gradients, textures, highlights, outlines, edges, text, labels, captions,
       pale colors, pastel colors, white overlay, black overlay, grey overlay,
-      transparency, fading
+      transparency
 
-    # Meta keys the template must have. Empty: this prompt describes the
-    # convention and needs nothing about the particular scene. A probe whose
-    # text says "{instruction}" would list it here, so a frame missing it fails
-    # in --dry-run rather than sending a prompt with a hole in it.
-    requires: []
+    # Only {relevant_objects}. The instruction itself is deliberately NOT in the
+    # prompt: this probe asks for masks on an object list that was already
+    # decided upstream, and handing the model the task as well invites it to
+    # act the task out or to reconcile the scene with it — which is exactly
+    # wrong on a counterfactual or adversarial sample, where the instruction
+    # names something that is not there. The instruction is still read, once, by
+    # the `semantics:` stage that produces this list (its `instruction_key`);
+    # it just never reaches the world model.
+    #
+    # `relevant_objects` comes from that stage, or straight from the source's
+    # meta_file if the list was written by hand — a frame missing it fails here,
+    # at render time, rather than reaching a backend with a hole in its prompt.
+    requires: [relevant_objects]
 
 # What to ask the backend for. The backend's own defaults fill anything omitted,
 # and configs/gen.yaml overrides both — so a smoke run can shorten every clip
 # without touching this file. {duration_s} above tracks whatever wins.
 video:
-  duration_s: 8
+  duration_s: 6
   aspect_ratio: "16:9"
   resolution: 720p
 

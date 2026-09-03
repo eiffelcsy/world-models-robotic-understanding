@@ -1,0 +1,106 @@
+# Generation run over RoboTrustBench (huggingface.co/datasets/Huiqiong0124/RoboTrustBench_Dataset).
+#
+# Prerequisite: materialize the dataset as a frames_dir + meta_file first —
+#   python scripts/fetch_robotrustbench.py --out ../robotrustbench
+# See that script's docstring for why (Windows can't hold the repo's own
+# filenames, which embed colons).
+#
+# Kept as its own config, with its own clips_dir/output_dir/manifest_out,
+# rather than edited into gen.yaml — RoboTrustBench is a distinct eval set from
+# the DROID pilot run gen.yaml drives, and the two shouldn't share a manifest or
+# a clip cache.
+root: ..
+
+frames:
+  type: frames_dir
+  params:
+    path: ./data/robotrustbench/frames
+    pattern: "*.png"
+    # Per-sample instruction + provenance from the dataset's own metadata,
+    # written by fetch_robotrustbench.py: {task, category, subcategory,
+    # source_traj_id}. `task` is available to any prompt template as
+    # {task} once a probe's prompt.yaml asks for it.
+    meta_file: ./data/robotrustbench/meta.yaml
+
+# Instruction -> the objects it involves, before any prompt is rendered. This is
+# what fills `{relevant_objects}` for instance_seg, and what makes wmeval's SAM 3
+# ground truth scope to the same objects (it writes `gt_prompt` into the
+# manifest). Without it, a probe whose prompt names objects has nothing to name.
+#
+# One small chat completion per sample, cached at <semantics_dir>/<sample_id>.json
+# and never repeated. Any OpenAI-compatible endpoint; the key is read from the
+# environment, never written here.
+#
+#   export LLM_BASE_URL=https://api.deepseek.com/v1
+#   export LLM_API_KEY=...
+#
+# `cached` is the same stage with no endpoint: store and overrides only, for a
+# rerun that must not call out.
+semantics:
+  type: llm_slots
+  params:
+    model: deepseek-chat
+    base_url: null            # null -> read base_url_env
+    base_url_env: LLM_BASE_URL
+    api_key_env: LLM_API_KEY
+    temperature: 0.0
+    max_retries: 3
+    timeout_s: 60
+
+    # Which meta key holds the instruction. fetch_robotrustbench.py writes
+    # RoboTrustBench's `language_instruction` as `task`.
+    instruction_key: task
+
+    # Appended to `gt_prompt` only, never to the generation prompt. Empty because
+    # instance_seg's prompt.yaml explicitly leaves the robot arm unpainted —
+    # adding "robot arm" here would put an instance in the ground truth that the
+    # model was told not to produce, and score it as a miss.
+    extra_gt_phrases: []
+
+    # Hand corrections, {sample_id: {patch}}, applied on read and never written
+    # back. Optional; a missing file is not an error.
+    overrides: configs/semantics_overrides.json
+
+semantics_dir: semantics/robotrustbench
+
+# RoboTrustBench ships images + instructions only, no clips to adopt — `local`
+# has nothing to find. Pick a real generator. veo3 calls the Gemini API and
+# costs money per clip; verify backends/veo3/backend.yaml against current docs
+# and run with `limit: 1` before a full pass.
+backend: veo3
+
+clips_dir: clips/robotrustbench
+output_dir: results/gen_robotrustbench
+manifest_out: configs/manifest.robotrustbench.yaml
+
+modules_dir: modules
+backends_dir: backends
+modules:
+  include: ["*"]
+  exclude: []
+
+video:
+  duration_s: 6
+
+# Set to a small number (or use --limit on the CLI) before a paid run.
+limit: null
+
+# null (default) = the first `limit` frames in source order — for frames_dir,
+# that's alphabetical by sample id, which has nothing to do with `category`.
+# On RoboTrustBench's uneven mix (533 A_Normal down to 101 D_Adversarial),
+# a plain `limit: 50` can and does land entirely inside one or two categories.
+# Set this to a frame.meta key — "category" for RoboTrustBench, or whatever a
+# future dataset's own fetch script writes the same way — and `limit` instead
+# draws proportionally from that key's distribution (largest-remainder
+# apportionment; see wmcore.utils.stratified_sample), so a 50-sample smoke run
+# still touches every category roughly in proportion. `limit_seed` picks which
+# items within each category — same seed, same picks, every run.
+limit_by: category
+limit_seed: 0
+
+# Always dry-run first: renders every prompt against the real instructions and
+# writes the manifest that would result, without calling veo3 or spending money.
+dry_run: false
+
+refresh: false
+fail_fast: false

@@ -33,9 +33,12 @@ def placeholders(text: str) -> set[str]:
 class Template(PromptBuilder):
     """`{placeholder}` substitution from the frame's metadata.
 
-    Fields come from `frame.meta`, plus the built-ins `sample_id` and every
-    video param (`duration_s`, `aspect_ratio`, `fps`, `resolution`, `seed`), so
-    a prompt can name its own duration without repeating the number.
+    Fields come from `frame.meta`, plus the built-ins `sample_id`, every video
+    param (`duration_s`, `aspect_ratio`, `fps`, `resolution`, `seed`), and
+    `settle_s` (`0.75 * duration_s`, str.format can't do arithmetic so it is
+    computed here) — so a prompt can name its own duration, or a fixed point
+    before the end of the clip, without repeating a number by hand that would
+    drift the moment `duration_s` is overridden elsewhere.
 
     A placeholder with nothing to fill it raises. A prompt is the entire
     instruction to the model, and a hole in it — "over the next  seconds" — is a
@@ -51,6 +54,9 @@ class Template(PromptBuilder):
 
     def __call__(self, frame: Frame, video: dict[str, Any]) -> Prompt:
         fields: dict[str, Any] = {"sample_id": frame.sample_id, **video, **frame.meta}
+        duration_s = video.get("duration_s")
+        if isinstance(duration_s, (int, float)) and not isinstance(duration_s, bool):
+            fields.setdefault("settle_s", _fmt_number(duration_s * 0.75))
 
         missing = [key for key in self.requires if key not in frame.meta]
         if missing:
@@ -64,6 +70,11 @@ class Template(PromptBuilder):
             negative=_render(self.negative, fields, frame) if self.negative else "",
             video=dict(video),
         )
+
+
+def _fmt_number(value: float) -> str:
+    """A computed seconds value, printed without a spurious `.0` or float noise."""
+    return f"{value:g}"
 
 
 def _render(text: str, fields: dict[str, Any], frame: Frame) -> str:

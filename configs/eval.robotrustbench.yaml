@@ -1,0 +1,18 @@
+# Evaluation run over the manifest configs/gen.robotrustbench.yaml produces.
+# Its own gt_dir/output_dir, same reasoning as gen.robotrustbench.yaml: a
+# separate eval set gets a separate ground-truth store and report, not one
+# shared with the DROID pilot run in eval.yaml.
+root: ..
+
+manifest: configs/manifest.robotrustbench.yaml
+output_dir: results/robotrustbench
+
+gt_dir: results/robotrustbench
+
+modules_dir: modules
+modules:
+  include: ["*"]
+  exclude: []
+
+limit: null
+fail_fast: false

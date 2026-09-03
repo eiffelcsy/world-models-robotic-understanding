@@ -32,7 +32,13 @@ def main() -> int:
     parser.add_argument("--list-components", action="store_true", help="print registered components and exit")
     parser.add_argument("--dry-run", action="store_true", help="render prompts, call no backend")
     parser.add_argument("--refresh", action="store_true", help="regenerate clips that already exist")
-    parser.add_argument("--limit", type=int, default=None, help="only the first N frames")
+    parser.add_argument("--limit", type=int, default=None, help="only N frames — first N, or see --limit-by")
+    parser.add_argument(
+        "--limit-by",
+        default=None,
+        help="with --limit, draw proportionally from this frame.meta key's distribution "
+             "(e.g. category) instead of taking the first N",
+    )
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args()
 
@@ -47,6 +53,8 @@ def main() -> int:
         config.refresh = True
     if args.limit is not None:
         config.limit = args.limit
+    if args.limit_by is not None:
+        config.limit_by = args.limit_by
 
     if args.list_components:
         import wmgen.runner  # noqa: F401  (imports the shipped components)
@@ -56,7 +64,7 @@ def main() -> int:
                 import_module(config.modules_dir, prompt.module)
             except ImportError:
                 pass
-        for family in ("source", "prompt", "backend", "check"):
+        for family in ("source", "semantics", "prompt", "backend", "check"):
             print(f"{family}:")
             for name in registry.available(family) or ["<none>"]:
                 print(f"  {name}")

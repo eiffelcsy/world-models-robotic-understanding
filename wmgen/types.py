@@ -110,6 +110,7 @@ class GenContext:
 
     run_dir: Path
     clips_dir: Path
+    semantics_dir: Path | None = None  # the slot store; None = resolve every run
     refresh: bool = False  # regenerate clips that already exist
     dry_run: bool = False  # render prompts, call no backend
     extras: dict[str, Any] = field(default_factory=dict)

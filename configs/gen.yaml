@@ -10,13 +10,25 @@ root: ..
 frames:
   type: frames_dir
   params:
-    path: ../droid/frames
+    path: ../path/to/frames
     pattern: "*.png"
     # Optional per-sample metadata, carried through to the manifest and
     # available to prompt templates as {placeholders}:
     #   meta:
     #     AUTOLab_..._f000021: {task: "put the red block in the bowl"}
     meta_file: null
+
+# Instruction -> the objects it involves, filling `{relevant_objects}` for a
+# probe whose prompt scopes itself to the task, and `gt_prompt` so wmeval's
+# ground truth scopes to the same objects. Optional and off here: null means the
+# stage never runs and no endpoint is needed. See configs/gen.robotrustbench.yaml
+# for a configured one, and wmgen/semantics.py for what it writes.
+#
+# Off in this config because these frames' `task` meta is a DROID task-type slug
+# ("move_object_into_or_out_of_container_ex_"), not an instruction naming
+# objects — there is nothing here for an extractor to read.
+semantics: null
+semantics_dir: semantics
 
 # Which world model. Names a directory under `backends/` holding a backend.yaml.
 # `local` adopts clips that already exist and costs nothing — start there.
@@ -46,6 +58,15 @@ video: {}
 
 # null = every frame the source yields. Set a small number before a paid run.
 limit: null
+
+# null (default): `limit` takes the first N frames in source order — for
+# frames_dir, sorted-glob, i.e. alphabetical by sample id, unrelated to any
+# meta field. Set this to a frame.meta key (e.g. "category") to instead draw
+# `limit` proportionally from that key's distribution — see
+# configs/gen.robotrustbench.yaml and wmcore.utils.stratified_sample. Only
+# useful once `meta_file` above actually carries that key per sample.
+limit_by: null
+limit_seed: 0
 
 # Render every prompt and write the manifest that would result, calling no
 # backend. The cost guardrail, and where a broken template is meant to fail.

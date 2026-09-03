@@ -119,6 +119,25 @@ version is that generated clips are cached exactly as ground truth is, because
 this is that pipeline's expensive stage, and that a clip already on disk is never
 made again.
 
+One optional stage sits between the frames and the prompts. A probe can scope
+itself to a task — "mask the objects *this task* involves" — but the only place
+those objects are named is the instruction, in free text. `semantics:` turns each
+instruction into a small record before any prompt is rendered, and writes two
+things into the frame's metadata:
+
+```
+instruction ──semantics──▶ relevant_objects   what the prompt asks to be painted
+                       └─▶ gt_prompt          what SAM 3 segments to score it
+```
+
+Both, because scoping one without the other is how this probe quietly measures
+nothing: a model asked to paint the marker and the mug, graded against a ground
+truth containing every object on the table, loses points for obeying. It is one
+small chat completion per sample against any OpenAI-compatible endpoint, cached
+at `<semantics_dir>/<sample_id>.json` and never repeated, with a JSON overrides
+file for the ones it gets wrong. A run with no `semantics:` block never calls
+anything, which is the right setting for a probe whose prompt names no object.
+
 ---
 
 ## Layout
@@ -140,8 +159,9 @@ wmcore/                  what both pipelines are built from
   config.py, utils.py, video.py, components.py
 wmgen/
   types.py               Frame, Prompt, Request, Clip, GenContext
-  components.py          FrameSource, PromptBuilder, VideoBackend, ClipCheck
+  components.py          FrameSource, SlotSource, PromptBuilder, VideoBackend, ClipCheck
   sources.py             where frames come from
+  semantics.py           instruction -> the objects it involves (cached, optional)
   prompt.py              template rendering
   backends.py            http_job, command, local_dir
   checks.py              is the clip usable

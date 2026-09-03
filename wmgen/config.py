@@ -59,8 +59,12 @@ class GenConfig:
     modules_dir: Path
     backends_dir: Path
     manifest_out: Path
+    semantics: dict[str, Any] | None = None
+    semantics_dir: Path = Path("semantics")
     video: dict[str, Any] = field(default_factory=dict)
     limit: int | None = None
+    limit_by: str | None = None
+    limit_seed: int = 0
     fail_fast: bool = False
     dry_run: bool = False
     refresh: bool = False
@@ -114,6 +118,35 @@ def load_backend_config(backends_dir: Path, name: str, resolve: Callable[[str], 
     )
 
 
+#: Semantics params naming a place on disk, resolved like every other path here.
+_SEMANTICS_PATH_PARAMS = ("overrides",)
+
+
+def load_semantics_spec(
+    raw: dict[str, Any] | str | None,
+    resolve: Callable[[str], Path] | None = None,
+) -> dict[str, Any] | None:
+    """The `semantics:` block, or None when a run does not need one.
+
+    A probe whose prompt names no object does not need this stage at all, so it
+    is optional and off unless configured — the cost of the run should follow
+    what the probes actually ask for.
+    """
+    if not raw:
+        return None
+    spec = {"type": raw} if isinstance(raw, str) else dict(raw)
+    if "type" not in spec:
+        raise ValueError("semantics config is missing 'type'")
+
+    params = dict(spec.get("params") or {})
+    if resolve is not None:
+        for key in _SEMANTICS_PATH_PARAMS:
+            if isinstance(params.get(key), str):
+                params[key] = str(resolve(params[key]))
+    spec["params"] = params
+    return spec
+
+
 def load_gen_config(path: str | Path) -> GenConfig:
     path = Path(path).resolve()
     raw = read_yaml(path)
@@ -142,8 +175,12 @@ def load_gen_config(path: str | Path) -> GenConfig:
         modules_dir=modules_dir,
         backends_dir=backends_dir,
         manifest_out=resolve(raw.get("manifest_out", "configs/manifest.yaml")),
+        semantics=load_semantics_spec(raw.get("semantics"), resolve),
+        semantics_dir=resolve(raw.get("semantics_dir", "semantics")),
         video=raw.get("video") or {},
         limit=raw.get("limit"),
+        limit_by=raw.get("limit_by"),
+        limit_seed=int(raw.get("limit_seed", 0)),
         fail_fast=bool(raw.get("fail_fast", False)),
         dry_run=bool(raw.get("dry_run", False)),
         refresh=bool(raw.get("refresh", False)),

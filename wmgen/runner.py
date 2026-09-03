@@ -1,10 +1,12 @@
 """Generate a clip for every enabled probe on every frame, and write the manifest.
 
 Serial, and it does not resume. One clip is made at a time, in the order the
-frames came out of the source, exactly as `wmeval.runner` scores them. Nothing
-here tracks a job across runs: interrupting a run abandons whatever the backend
-is generating at that moment. If a vendor delivers that clip anyway, adopt it
-with the `local_dir` backend rather than paying for it twice.
+frames came out of the source — after `limit`/`limit_by` have already cut that
+list down, see `wmcore.utils.stratified_sample` — exactly as `wmeval.runner`
+scores them. Nothing here tracks a job across runs: interrupting a run abandons
+whatever the backend is generating at that moment. If a vendor delivers that
+clip anyway, adopt it with the `local_dir` backend rather than paying for it
+twice.
 """
 
 from __future__ import annotations
@@ -15,9 +17,9 @@ from pathlib import Path
 
 from wmcore import registry
 from wmcore.modules import import_module
-from wmcore.utils import ensure_dir
+from wmcore.utils import ensure_dir, stratified_sample
 
-from . import backends, checks, prompt, sources  # noqa: F401  (registration)
+from . import backends, checks, prompt, semantics, sources  # noqa: F401  (registration)
 from .config import BACKEND_FILE, GenConfig, load_gen_config, video_params
 from .report import write_prompts, write_report
 from .task import Task
@@ -50,13 +52,25 @@ def run(config: GenConfig) -> list[Clip]:
     ctx = GenContext(
         run_dir=ensure_dir(config.output_dir),
         clips_dir=ensure_dir(config.clips_dir),
+        semantics_dir=ensure_dir(config.semantics_dir) if config.semantics else None,
         refresh=config.refresh,
         dry_run=config.dry_run,
     )
 
     frames: list[Frame] = list(registry.build("source", config.frames)(ctx))
     if config.limit:
-        frames = frames[: config.limit]
+        if config.limit_by:
+            frames = stratified_sample(frames, config.limit, lambda f: f.meta.get(config.limit_by), config.limit_seed)
+        else:
+            frames = frames[: config.limit]  # whatever order the source yields — sorted-glob, for frames_dir
+
+    # Instruction -> objects, before any prompt is rendered. Cached per sample,
+    # so this is free on a rerun; a frame it cannot resolve keeps its place and
+    # fails on `requires:` at render time, which is before the backend is called.
+    slot_failures = semantics.apply(frames, config.semantics, ctx)
+    if slot_failures and config.fail_fast:
+        first = slot_failures[0]
+        raise RuntimeError(f"semantics/{first['sample_id']}: {first['error']}")
 
     log.info(
         "%d frames x %d probes = %d clips%s via %s",

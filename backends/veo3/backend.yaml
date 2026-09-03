@@ -19,7 +19,7 @@ name: veo3
 type: http_job
 
 params:
-  model_id: veo-3.0-generate-001
+  model_id: veo-3.1-fast-generate-preview
 
   # Never a literal key. `${...}` is read from the environment and a missing
   # variable is an error before any request is sent.
@@ -27,7 +27,7 @@ params:
     x-goog-api-key: "${GEMINI_API_KEY}"
 
   submit:
-    url: https://generativelanguage.googleapis.com/v1beta/models/veo-3.0-generate-001:predictLongRunning
+    url: https://generativelanguage.googleapis.com/v1beta/models/veo-3.1-fast-generate-preview:predictLongRunning
     method: POST
     body:
       instances:
@@ -39,8 +39,12 @@ params:
         aspectRatio: "{aspect_ratio}"
         resolution: "{resolution}"
         negativePrompt: "{negative}"
-        # Veo 3 generates a fixed-length clip, so duration is not sent — it is
-        # still declared in `defaults` below because the prompt text names it.
+        # veo-3.1-* accepts 4, 6 or 8 (a number, not a string — "{duration_s}"
+        # is exactly one placeholder so _fill keeps it typed, see
+        # wmgen/backends.py). Unlike veo-3.0, which was a fixed 8s and took no
+        # duration field at all — if you ever point model_id back at a 3.0
+        # model, drop this line rather than send a field it rejects.
+        durationSeconds: "{duration_s}"
     # Where the operation id is in the response: {"name": "models/.../operations/..."}
     job_id_path: name
 
@@ -61,6 +65,6 @@ params:
 # What this model supports. A probe's prompt.yaml overrides these, and
 # configs/gen.yaml overrides both.
 defaults:
-  duration_s: 8
+  duration_s: 6
   aspect_ratio: "16:9"
   resolution: 720p

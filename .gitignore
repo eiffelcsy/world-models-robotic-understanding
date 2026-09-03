@@ -3,7 +3,10 @@ venv/
 __pycache__/
 *.pyc
 
+data/
+
 # Generated
+semantics/
 results/
 clips/
 configs/manifest.yaml

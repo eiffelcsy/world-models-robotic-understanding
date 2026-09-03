@@ -13,7 +13,8 @@ and have to change together.
 
 from wmcore.registry import register
 
-from .components import ClipCheck, ClipUnavailable, FrameSource, PromptBuilder, VideoBackend
+from .components import (ClipCheck, ClipUnavailable, FrameSource, PromptBuilder, SlotSource,
+                         SlotsUnavailable, VideoBackend)
 from .config import BackendConfig, GenConfig, PromptConfig, load_gen_config, load_prompt_config
 from .runner import run, run_from_file
 from .task import Task
@@ -34,6 +35,8 @@ __all__ = [
     "PromptBuilder",
     "PromptConfig",
     "Request",
+    "SlotSource",
+    "SlotsUnavailable",
     "Task",
     "VideoBackend",
     "load_gen_config",

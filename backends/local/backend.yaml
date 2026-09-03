@@ -28,6 +28,6 @@ params:
   link: false
 
 defaults:
-  duration_s: 8
+  duration_s: 6
   aspect_ratio: "16:9"
   resolution: 720p
