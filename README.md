@@ -27,6 +27,10 @@ A probe owns both halves of its convention, in one directory: the prompt that
 asks for an appearance change, and the extractor that decodes it. They change
 together or the probe measures nothing.
 
+The results reported so far are frozen at git tag `results-freeze-1`; see
+[freeze/README.md](freeze/README.md) for generator versions, environments and
+checksums of the gitignored clips, results and ground truth.
+
 ---
 
 ## Quickstart
