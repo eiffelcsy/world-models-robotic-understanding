@@ -14,6 +14,9 @@ instance" is a text decision and it is made here. `prompt` in probe.yaml sets th
 default for the run; a sample overrides it through its manifest `meta` (see
 `prompt_key`), which is how a scene with a known object list gets a tighter
 prompt than the generic one.
+
+On LIBERO the masks come from the simulator instead (`sim_instances`, below),
+which configs/eval.libero.yaml selects.
 """
 
 from __future__ import annotations
@@ -21,7 +24,9 @@ from __future__ import annotations
 import numpy as np
 
 from wmeval import GroundTruthSource, ProbeData, register
+from wmeval.simulator import object_mask, sim_record
 from wmeval.types import RunContext, Sample
+from wmcore.utils import concept_fallbacks
 
 from .sam3 import Instance, Sam3ImageSegmenter
 from .viz import overlay
@@ -103,14 +108,7 @@ class Sam3Instances(GroundTruthSource):
         prompts = self._prompts_for(sample)
         found: list[Instance] = []
         for prompt in prompts:
-            found.extend(
-                self._segmenter.segment(
-                    input_frame,
-                    prompt,
-                    score_threshold=self.score_threshold,
-                    mask_threshold=self.mask_threshold,
-                )
-            )
+            found.extend(self._segment(input_frame, prompt))
 
         shape = tuple(input_frame.shape[:2])
         instances = self._select(found, shape)
@@ -127,6 +125,7 @@ class Sam3Instances(GroundTruthSource):
                 "source": "sam3",
                 "model_id": self.model_id,
                 "prompts": prompts,
+                "concepts_used": sorted({instance.label for instance in instances}),
                 "frame_shape": list(shape),
                 "n_instances": len(instances),
                 "n_detections": len(found),
@@ -135,6 +134,28 @@ class Sam3Instances(GroundTruthSource):
                 "boxes": [[round(v, 1) for v in instance.box] for instance in instances],
             },
         )
+
+    def _segment(self, input_frame: np.ndarray, prompt: str, threshold: float | None = None) -> list[Instance]:
+        """Segment `prompt`; if it grounds nothing, retry its head noun.
+
+        Some phrases an instruction yields ("toilet paper", "paper towel") are
+        ones SAM 3 does not ground even at a low threshold, while their head noun
+        is. The fallback is only reached when the phrase itself returns nothing,
+        so it never broadens a ground truth that already found its object.
+        """
+        threshold = self.score_threshold if threshold is None else threshold
+        hits = self._segmenter.segment(
+            input_frame, prompt, score_threshold=threshold, mask_threshold=self.mask_threshold
+        )
+        if hits:
+            return hits
+        for alternative in concept_fallbacks(prompt)[1:]:
+            hits = self._segmenter.segment(
+                input_frame, alternative, score_threshold=threshold, mask_threshold=self.mask_threshold
+            )
+            if hits:
+                break
+        return hits
 
     def render(self, data: ProbeData, input_frame: np.ndarray) -> np.ndarray:
         """The stored masks tinted over the frame they came from."""
@@ -171,3 +192,55 @@ class Sam3Instances(GroundTruthSource):
 def _iou(a: np.ndarray, b: np.ndarray) -> float:
     union = np.logical_or(a, b).sum()
     return float(np.logical_and(a, b).sum() / union) if union else 0.0
+
+
+def _box(mask: np.ndarray) -> list[float]:
+    rows, cols = np.nonzero(mask)
+    return [float(cols.min()), float(rows.min()), float(cols.max()), float(rows.max())] if len(rows) else []
+
+
+@register("gt", "sim_instances")
+class SimInstances(GroundTruthSource):
+    """Simulator replay -> one exact mask per object the task is about.
+
+    The objects are the task's `obj_of_interest` from its BDDL file, which
+    scripts/libero_replay/render_gt.py writes into the meta as `sim_objects`; each
+    mask is every pixel MuJoCo's segmentation render assigns to that object. An
+    object hidden behind the arm keeps only its visible pixels, and one hidden
+    entirely is left out and named in `hidden`.
+    """
+
+    store_name = "instance_seg_sim_gt"
+    store_params = ("objects_key", "min_pixels")
+
+    def __init__(self, objects_key: str = "sim_objects", min_pixels: int = 1, min_instances: int = 1) -> None:
+        super().__init__(objects_key=objects_key, min_pixels=min_pixels, min_instances=min_instances)
+
+    def compute(self, sample: Sample, input_frame: np.ndarray, ctx: RunContext) -> ProbeData:
+        record = sim_record(sample)
+        masks, labels, hidden = [], [], []
+        for name in sample.meta[self.objects_key]:
+            mask = object_mask(record, name)
+            if mask.sum() < self.min_pixels:
+                hidden.append(name)
+                continue
+            masks.append(mask)
+            labels.append(name)
+        if len(masks) < self.min_instances:
+            raise RuntimeError(f"{len(masks)} visible object(s) of interest on {sample.sample_id}")
+        return ProbeData(
+            "instances",
+            {"masks": masks},
+            {
+                "source": "simulator",
+                "frame_shape": list(input_frame.shape[:2]),
+                "n_instances": len(masks),
+                "labels": labels,
+                "hidden": hidden,
+                "areas": [int(m.sum()) for m in masks],
+                "boxes": [_box(m) for m in masks],
+            },
+        )
+
+    def render(self, data: ProbeData, input_frame: np.ndarray) -> np.ndarray:
+        return overlay(input_frame, [np.asarray(m, dtype=bool) for m in data.get("masks") or []])

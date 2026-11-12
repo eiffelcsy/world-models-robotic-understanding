@@ -1,0 +1,52 @@
+name: depth_perception
+description: >
+  Replace the photograph with a grayscale depth map of the same scene: near
+  surfaces bright, far surfaces dark, camera locked. This is the asking half of
+  the convention extractor.py decodes — change one and change the other.
+
+enabled: true
+
+prompt:
+  type: template
+  params:
+    # Slots (docs/prompt_framework.md): P (transform) | E | E | C+H
+    text: |
+      This photograph becomes a single grayscale depth map of exactly the same
+      scene, from exactly the same camera position: same framing, same field of
+      view, same geometry. Every surface keeps its shape and outline. Nothing is
+      added or removed.
+
+      Depth is shown only as brightness and nothing else. Surfaces closest to the
+      camera are the brightest — near white. Surfaces further away are darker,
+      grading smoothly to black at the far end of the scene. A surface at one
+      distance is one flat shade everywhere it appears.
+
+      The image is completely grayscale. There is no color anywhere, no red or
+      green or blue tint, no colormap, no rainbow, no red-to-blue scale. There
+      are no edges, no outlines, no text, no labels, no numbers, no arrows, no
+      shading detail, no texture, no highlights, no reflections: only smooth
+      brightness that encodes distance.
+
+      The camera is locked off on a tripod and does not move, pan, zoom or
+      shake. The depth map is fully formed by {settle_s} seconds and then holds
+      completely still for the rest of the {duration_s} seconds. One continuous
+      shot, no cut.
+
+    negative: >
+      color, colored, tint, colormap, rainbow, red blue gradient, jet, turbo,
+      viridis, edges, outlines, contours, text, labels, numbers, arrows,
+      shading, texture, highlights, reflections, camera motion, panning,
+      zooming, handheld shake, moving objects
+
+video:
+  duration_s: 6
+  aspect_ratio: "16:9"
+  resolution: 720p
+
+checks:
+  - type: playable
+    params:
+      min_frames: 24
+  - type: changed
+    params:
+      min_change: 0.0

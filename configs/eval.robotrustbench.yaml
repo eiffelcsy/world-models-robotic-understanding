@@ -11,7 +11,11 @@ gt_dir: results/robotrustbench
 
 modules_dir: modules
 modules:
-  include: ["*"]
+  # RoboTrustBench is real video with no simulator, so only the two tasks whose
+  # ground truth a model can estimate run here: SAM 3 masks and DA3 depth. The
+  # robot and grasp tasks need exact ground truth and run on LIBERO only
+  # (configs/eval.libero.yaml).
+  include: ["instance_seg", "depth_perception"]
   exclude: []
 
 limit: null

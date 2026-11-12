@@ -46,7 +46,7 @@ reached:
 | `command` | local or self-hosted checkpoints, behind a templated command line. Keeps torch out of wmgen. |
 | `local_dir` | clips generated elsewhere, adopted into the run layout. No key, no cost. |
 
-`backends/veo3/backend.yaml` is a worked `http_job`; see
+`backends/omni12/backend.yaml` is a worked `http_job`; see
 [backends/\_\_init\_\_.py](../backends/__init__.py) for the layout and for the
 escape hatch when YAML genuinely cannot express a vendor's call.
 

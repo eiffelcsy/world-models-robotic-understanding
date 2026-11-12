@@ -1,0 +1,45 @@
+# E3: a dot instead of a region. Slot E.
+#
+# Answering by marking the input image with a minimal overlay (a dot, circle or
+# line) is how VideoThinkBench (arXiv 2511.04570) and BabyVision-Gen (2601.06521)
+# read answers from generators. A dot has no outline to snap to the object's
+# silhouette, the dominant failure here.
+#
+# Decoder contract: unchanged. A dot one finger wide (~2 cm) is ~250-1500 px at
+# LIBERO's 730-1090 px/m, above color_mask's min_area_frac 0.0002 (~184 px), and
+# grasp_hit scores a small region on the grasp near 0.99 (README).
+#
+# Word diff against T2 (the current best): "mask" -> "dot" throughout, and
+#   [-An opaque colored mask-]{+A solid, opaque, round colored dot+} appears on top
+#   of ... It is a small [-patch,-]{+dot,+} about the width of a gripper finger ...
+#
+# Built from T2 (adopted 2026-11-10), one slot changed (docs/grasp_prompt_ablations.md).
+description: "E3: T2 with a round dot instead of a region mask"
+prompt:
+  params:
+    text: |
+      This photograph stays exactly as it is: same framing, same lighting, same
+      shadows, same photographic texture and grain. Nothing in it is redrawn,
+      restyled, simplified, flattened or re-lit. The scene geometry also stays
+      the same — no objects are added, removed or changed in any way.
+
+      The camera is locked off on a tripod and does not move, pan, zoom or
+      shake. Nothing in the scene moves.
+
+      A solid, opaque, round colored dot appears on top of the graspable part of
+      {grasp_object} — the region of the object that a robot gripper would
+      close around to pick it up. The dot covers only that graspable region,
+      not the whole object, and sits precisely on its outline.
+      It is a small dot, about the width of a gripper finger, where the fingers
+      would touch the object. It is one flat,
+      fully saturated color, with no shading, gradient or texture. Once it has
+      appeared it stays unchanged for the rest of the clip.
+
+      Everything not covered by the dot remains the untouched original
+      photograph: the rest of the object, every other object in the scene, the
+      robot arm, the table surface, the floor and the background.
+
+      The dot is in place by {settle_s} seconds into the clip, after which the
+      frame is completely still for the remainder of the {duration_s} seconds.
+      Static locked-off camera, one continuous shot, no cut, no zoom, no pan,
+      no dolly, no camera shake, no text, no labels, no outlines, no watermark.

@@ -2,7 +2,7 @@
 
 Ask the world model to repaint the scene so each object carries its own flat
 color; score the instances that come back against SAM 3 run on the conditioning
-frame.
+frame (RoboTrustBench), or the simulator's exact masks (LIBERO).
 
 All four stages are written and `probe.yaml` ships enabled. The extractor's
 saturation thresholds are the part still worth calibrating — see
@@ -12,7 +12,7 @@ saturation thresholds are the part still worth calibrating — see
 
 | file | pipeline | says |
 |---|---|---|
-| [prompt.yaml](prompt.yaml) | wmgen | repaint each object in its own flat, fully saturated color, then hold still |
+| [prompt.yaml](prompt.yaml) | wmgen | an opaque colored mask on each listed object, then hold still |
 | [probe.yaml](probe.yaml) | wmeval | decode those colors back into instances and score them against SAM 3 |
 
 They are one convention written twice, and they change together. `prompt.yaml`
@@ -60,6 +60,14 @@ The store root is `gt_dir` in `configs/eval.yaml`; the subdirectory name is the
 probe's. Delete a file to force that sample to be recomputed, or the directory to
 force all of them.
 
+## LIBERO: masks from the simulator
+
+On LIBERO the masks are not SAM 3's. `sim_instances` reads the exact mask of each
+object the task is about from a MuJoCo replay of the demonstration
+(`scripts/libero_replay/render_gt.py`), and `configs/eval.libero.yaml` selects
+it. Its store is `results/libero/instance_seg_sim_gt/`. See
+[docs/libero_ground_truth.md](../../docs/libero_ground_truth.md).
+
 ## Regenerating it
 
 Params are not part of the filename, so changing a prompt or a threshold in
@@ -84,13 +92,13 @@ PowerShell as in bash. Counts and scores go to stdout.
 result is an error and does not change a mask, so it is not one of the params a
 stale-store warning considers.
 
-## Two numbers: the readout frame and the best frame
+## Two numbers: the last frame and the best frame
 
 The eval pipeline reports both, per sample, in `scores.csv` and `summary.md`:
 
 | column | frame | chosen by |
 |---|---|---|
-| `mean_iou`, `f1`, … | the readout's — `most_static` over the last 2 s | the video alone |
+| `mean_iou`, `f1`, … | the last frame (`last_frame` readout) | the video alone |
 | `best_mean_iou`, `best_f1`, … | whichever frame scores highest | **the ground truth** |
 
 `best_frame_index` says which frame won, and `info["best_frame"]` in
@@ -123,7 +131,7 @@ The same pair as the pipeline's, for one clip:
 
 - **last** is the final frame. Nothing consulted the ground truth to pick it.
 - **best** is the frame with the highest `mean_iou` anywhere in the clip, chosen
-  *by* the ground truth — the oracle upper bound.
+  *by* the ground truth — the upper bound.
 
 A large gap means the model did understand the scene and then drifted, which is
 a readout problem; a low `best` means it never did, which is not. `--rank-by`

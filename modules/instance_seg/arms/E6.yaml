@@ -1,0 +1,37 @@
+# E6: the paper's description of the answer (intro sentence and entity-by-entity flat colors) -> our opaque-mask and outline sentences.
+#
+# Bridging path, Wiedemer et al. (2025) -> our base prompt: paper -> F1 -> T2 -> R1 -> E6 -> H2
+# -> P1 -> C1 -> N1 (= base). Each arm is the previous one with one change. The base was
+# adapted from the paper's prompt by design; this path measures each change afterwards
+# (docs/segmentation_prompt_ablations.md).
+#
+# Slot changed: E.
+#
+# Word diff against R1:
+#   [-Create an animation of instance segmentation being performed on this photograph:-]
+#   [-each of these objects — {relevant_objects} — is overlaid in a different flat color.-]
+#   [-Then, the first of these objects is covered by a flat color, perfectly preserving its silhouette.-]
+#   [-Then the second object, too, is covered by a different flat color, perfectly preserving its silhouette.-]One [-by one, each of these objects is covered by-]{+at+} a [-different flat color.-]
+#   [-Finally, all-]{+time, in immediate succession, an opaque colored mask appears on top of each+} of these objects [-are covered with different colors.-]{+— {relevant_objects} — lying directly over that object and covering it exactly.+}
+#   {+Each mask spreads outward from inside the object until its edge sits precisely on that object's outline, then stops, including at thin parts, handles and holes.+}
+#   Everything not covered by a [-flat color-]{+mask+} remains the untouched original photograph:
+description: "E6: the paper's description of the answer (intro sentence and entity-by-entity flat colors) -> our opaque-mask and outline sentences"
+prompt:
+  params:
+    text: |
+      The animation starts from the provided, unaltered photograph. The scene in the
+      photograph is static and doesn't move.
+
+      One at a time, in immediate succession, an opaque colored mask appears on top
+      of each of these objects — {relevant_objects} — lying directly over that
+      object and covering it exactly. Each mask spreads outward from inside the
+      object until its edge sits precisely on that object's outline, then stops,
+      including at thin parts, handles and holes.
+
+      Everything not covered by a mask remains the untouched original photograph:
+      every other object in the scene, the robot arm, the table surface, the floor,
+      the walls, the background, and the shadows objects cast onto that surface.
+
+      Static shot without camera movement. No pan. No rotation. No zoom. No glitches
+      or artifacts.
+    negative: ""

@@ -51,8 +51,8 @@ class Task:
         )
 
     def generate(self, frame: Frame, backend: VideoBackend, ctx: GenContext) -> Clip:
-        dest = clip_for(ctx.clips_dir, self.name, frame.sample_id)
-        info: dict[str, Any] = {}
+        dest = clip_for(ctx.clips_dir, self.name, frame.sample_id, subdir=ctx.clip_subdir)
+        info: dict[str, Any] = {"clip_subdir": str(ctx.clip_subdir)}
 
         try:
             prompt = self.prompt(frame, self.video)

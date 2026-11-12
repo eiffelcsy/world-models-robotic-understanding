@@ -1,9 +1,22 @@
 name: instance_seg
 description: >
-  Every object in the conditioning frame repainted in its own flat color.
-  Ground truth is SAM 3 run on the input frame; the model never sees it.
+  The objects the task is about (the frame's relevant_objects) masked in flat
+  color, the rest of the frame untouched.
+  Ground truth is SAM 3 run on the input frame (RoboTrustBench), or the
+  simulator's exact masks on LIBERO (configs/eval.libero.yaml); the model never
+  sees it.
 
 enabled: true
+
+level: Scene
+headline: mean_iou
+
+# Fidelity gates (proposal Phase 4): the rollout is scored, but flagged invalid
+# if it repaints the scene outside the objects, marks nothing, or never settles.
+gates:
+  - {type: scene_preservation, params: {max_change: 0.15, dilate: 5}}
+  - {type: instruction_compliance, params: {min_area_frac: 0.0005, max_area_frac: 0.9}}
+  - {type: temporal_stability, params: {window_s: 1.0, stride: 2, max_diff: 10.0}}
 
 # The predetermined frame: chosen without ever seeing the ground truth, so its
 # scores are the deployable ones. `last_frame` is the paper's, and takes the
@@ -14,7 +27,7 @@ readout:
   params:
     back_off: 1       # 1 = the final frame; raise it to back off from the end
 
-# The oracle frame, reported alongside as `best_<metric>`: the best any frame of
+# The best frame, reported alongside as `best_<metric>`: the best any frame of
 # the clip reaches, chosen by the ground truth. Veo keeps animating after the
 # task is done, so this is usually well above the readout frame — the gap is the
 # readout's loss, not the model's. An upper bound; label it as one.
@@ -23,7 +36,7 @@ best_frame:
   rank_by: mean_iou   # the score maximised over frames
   stride: 1           # every frame; raise it to trade resolution for time
   # The opening frames are still the conditioning frame, so any score there is
-  # won by scene color the model never painted. Don't let the oracle pick them.
+  # won by scene color the model never painted. Don't let the best-frame search pick them.
   start_index: 5
 
 ground_truth:
@@ -55,6 +68,9 @@ extractor:
     max_area_frac: 0.1
 
     max_instances: 20
+    # Paint must differ from the conditioning frame, so the scene's own
+    # saturated objects do not decode as instances. Same value as grasp_region_seg.
+    min_change: 40.0
 
 metrics:
   - type: instance_match_iou

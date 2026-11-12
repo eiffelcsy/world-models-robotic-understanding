@@ -1,0 +1,4 @@
+# Extra dependencies for this probe only; the pipeline itself needs none of them.
+#   pip install -r modules/grasp_region_seg/requirements.txt
+# Its ground truth is read from a simulator replay, so no model is needed.
+opencv-python>=4.8

@@ -50,7 +50,13 @@ def run(config: EvalConfig) -> list[Result]:
                     raise RuntimeError(f"{probe.name}/{sample.sample_id}: {result.error}")
 
     dump_json(config.output_dir / "results.json", [r.to_dict() for r in results])
-    write_report(results, config.output_dir, probes=[p.name for p in probes])
+    write_report(
+        results,
+        config.output_dir,
+        probes=[p.name for p in probes],
+        levels={p.name: p.level for p in probes},
+        headlines={p.name: p.headline for p in probes},
+    )
     log.info("done in %.1fs -> %s", time.time() - started, config.output_dir)
     return results
 

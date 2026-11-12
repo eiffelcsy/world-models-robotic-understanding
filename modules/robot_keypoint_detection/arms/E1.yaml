@@ -1,0 +1,21 @@
+# E1: what the answer looks like. Slot E.
+#
+# Word diff against T1:
+#   [-Add-]{+One at+} a [-bright dot of-]{+time,+} a [-different color-]{+small, bright,
+#   fully saturated circular dot appears+} on each joint ... Each dot {+is a
+#   different vivid color,+} sits exactly on its [-joint.-]{+joint, and is small: a
+#   compact circle a few pixels across, not a line, not a ring, not an arrow, not
+#   a label.+}
+#
+# Bridging path, adapted Wiedemer et al. (2025) keypoint prompt -> our base:
+# paper -> R1 -> T1 -> E1 -> K1 -> base. Each arm is the previous one with one change.
+# The base was written by design; this path measures each change afterwards
+# (docs/keypoint_prompt_ablations.md).
+#
+# No negatives.
+description: "E1: the base's dot encoding (one at a time, small, saturated, distinct colours)"
+prompt:
+  params:
+    text: |
+      One at a time, a small, bright, fully saturated circular dot appears on each joint of the robot arm — the rotating joints where one rigid link meets the next, from the base all the way to the gripper. Each dot is a different vivid color, sits exactly on its joint, and is small: a compact circle a few pixels across, not a line, not a ring, not an arrow, not a label. There is one dot per joint and nothing else is marked. The dots are the only thing that changes. The robot arm itself, every object in the scene, the table, the floor and the background all remain the untouched original photograph. Static camera perspective, no zoom or pan.
+    negative: ""

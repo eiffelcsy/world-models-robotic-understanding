@@ -1,0 +1,46 @@
+# T2: which joints, given what is in view. Slot T.
+#
+# Only 2-5 of the 7 ground-truth keypoints (link0, 2, 3, 4, 6, 7, hand) are inside
+# the frame on the tune frames: the camera crops the arm. The base mount (link0)
+# and the hand are in view in every one, while the middle links are often not
+# (gt "outside_frame"). This names the two that always count and says that joints
+# out of view get no dot, so the model does not crowd the visible arm with extra
+# dots (precision) or skip the mount at the image edge (recall). It does not give
+# a count, since the visible count changes from 2 to 5.
+#
+# Word diff against base:
+#   ...There is one dot per joint and nothing else is marked. {+The dots include
+#   the round base where the arm is mounted and the gripper at the end of the arm.
+#   Joints outside the picture get no dot.+}
+#
+# Improvement arm, built from the base prompt (prompt.yaml), one slot changed.
+# A hypothesis to run alongside the base (docs/keypoint_prompt_ablations.md).
+description: "T2: base naming the always-visible joints; none for joints out of view"
+prompt:
+  params:
+    text: |
+      This photograph stays exactly as it is: same framing, same lighting, same
+      shadows, same photographic texture and grain. Nothing in it is redrawn,
+      restyled, simplified, flattened or re-lit. The scene geometry also stays
+      the same — no objects are added, removed or changed in any way.
+
+      The camera is locked off on a tripod and does not move, pan, zoom or
+      shake. Nothing in the scene moves.
+
+      One at a time, a small, bright, fully saturated circular dot appears on
+      each joint of the robot arm — the rotating joints where one rigid link
+      meets the next, from the base all the way to the gripper. Each dot is a
+      different vivid color, sits exactly on its joint, and is small: a compact
+      circle a few pixels across, not a line, not a ring, not an arrow, not a
+      label. There is one dot per joint and nothing else is marked. The dots include the
+      round base where the arm is mounted and the gripper at the end of the arm.
+      Joints outside the picture get no dot.
+
+      The dots are the only thing that changes. The robot arm itself, every
+      object in the scene, the table, the floor and the background all remain
+      the untouched original photograph.
+
+      All dots are in place by {settle_s} seconds into the clip, after which the
+      frame is completely still for the remainder of the {duration_s} seconds.
+      Static locked-off camera, one continuous shot, no cut, no zoom, no pan,
+      no dolly, no camera shake, no text, no labels, no outlines, no watermark.

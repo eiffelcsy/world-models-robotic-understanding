@@ -85,6 +85,13 @@ class Result:
     scores: dict[str, float] = field(default_factory=dict)
     info: dict[str, Any] = field(default_factory=dict)
     error: str | None = None
+    #: Fidelity gates: `ok` rows that fail a gate are still scored but flagged
+    #: invalid, and an invalid rate is reported beside every mean (see gates.py).
+    valid: bool = True
+    invalid_reason: str | None = None
+    #: The sample's manifest `meta`, carried so a report can slice by scenario
+    #: (RoboTrustBench's `category`) without re-reading the manifest.
+    meta: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -94,6 +101,9 @@ class Result:
             "scores": self.scores,
             "info": self.info,
             "error": self.error,
+            "valid": self.valid,
+            "invalid_reason": self.invalid_reason,
+            "meta": self.meta,
         }
 
 

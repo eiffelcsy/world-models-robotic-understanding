@@ -4,9 +4,16 @@ __pycache__/
 *.pyc
 
 data/
+checkpoints/
 
 # Generated
 semantics/
 results/
 clips/
 configs/manifest.yaml
+
+# Separate Python 3.10 env for LIBERO simulator replay (scripts/replay_libero.py)
+venv_libero/
+
+# Ignore third-party libraries
+third_party/

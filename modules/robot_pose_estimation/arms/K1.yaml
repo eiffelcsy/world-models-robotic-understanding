@@ -1,0 +1,47 @@
+# K1: the shared core. Slots P, C and H together, plus the change to prose.
+#
+# One step, as for grasp and keypoints: P, C and H are the core wording shared word
+# for word by the overlay probes, measured one at a time on the segmentation path.
+# Adds the base's preservation and camera paragraphs and its hold paragraph, which
+# replaces "Static camera perspective, no zoom or pan." The text is now the base,
+# byte for byte (checked); only the negatives differ.
+#
+# Bridging path, Wiedemer et al. (2025) Fig. 12 adapted to pose -> our base:
+# paper -> R1 -> T1 -> E1 -> K1 -> base. Each arm is the previous one with one change.
+# The base was written by design; this path measures each change afterwards
+# (docs/pose_prompt_ablations.md).
+#
+# No negatives. The next step, `base` (prompt.yaml), adds them (slot N).
+description: "K1: the shared core (P, C, H) and prose form; text equals the base"
+prompt:
+  params:
+    text: |
+      This photograph stays exactly as it is: same framing, same lighting, same
+      shadows, same photographic texture and grain. Nothing in it is redrawn,
+      restyled, simplified, flattened or re-lit. The scene geometry also stays
+      the same — no objects are added, removed or changed in any way.
+
+      The camera is locked off on a tripod and does not move, pan, zoom or
+      shake. Nothing in the scene moves.
+
+      Two small, bright, fully saturated circular dots appear on the robot arm,
+      marking the orientation of its gripper.
+
+      The first dot is red. It sits exactly on the center of the gripper, right
+      at the point the gripper would close on an object.
+
+      The second dot is green. It sits just beyond the tips of the two gripper
+      fingers, about a finger's length past them, on the straight line that
+      runs from the back of the gripper through the middle of the fingertips.
+
+      Both dots are small compact circles a few pixels across — no lines, no
+      arrows, no rings, no labels, no text. They are the only thing that
+      changes: the robot arm, every object in the scene, the table, the floor
+      and the background all remain the untouched original photograph.
+
+      The two dots are in place by {settle_s} seconds into the clip, after which
+      the frame is completely still for the remainder of the {duration_s}
+      seconds. Static locked-off camera, one continuous shot, no cut, no zoom,
+      no pan, no dolly, no camera shake, no text, no labels, no outlines, no
+      watermark.
+    negative: ""

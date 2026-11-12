@@ -5,7 +5,7 @@ answer lives in the tail of the clip. Which tail frame to take is a per-probe
 choice, so readouts are registered components configured from YAML.
 
 The frame reading itself is `wmcore.video`, shared with wmgen; `iter_frames` is
-re-exported here because the probe's oracle pass imports it from this module.
+re-exported here because the probe's best-frame pass imports it from this module.
 """
 
 from __future__ import annotations

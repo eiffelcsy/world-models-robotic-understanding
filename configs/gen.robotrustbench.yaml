@@ -21,6 +21,10 @@ frames:
     # source_traj_id}. `task` is available to any prompt template as
     # {task} once a probe's prompt.yaml asks for it.
     meta_file: ./data/robotrustbench/meta.yaml
+    # Pin the run to the frozen 20-item pilot. This is the pilot's definition —
+    # the file, not `limit`/`limit_by`, because `stratified_sample` depends on
+    # frame enumeration order and so is not stable across filesystems.
+    include: ./configs/pilot_ids.txt
 
 # Instruction -> the objects it involves, before any prompt is rendered. This is
 # what fills `{relevant_objects}` for instance_seg, and what makes wmeval's SAM 3
@@ -64,10 +68,17 @@ semantics:
 semantics_dir: semantics/robotrustbench
 
 # RoboTrustBench ships images + instructions only, no clips to adopt — `local`
-# has nothing to find. Pick a real generator. veo3 calls the Gemini API and
-# costs money per clip; verify backends/veo3/backend.yaml against current docs
-# and run with `limit: 1` before a full pass.
-backend: veo3
+# has nothing to find. Pick a real generator.
+# omni12 (Gemini Omni 1.2 Flash, Gemini API) costs money per clip; verify
+# backends/omni12/backend.yaml with `--limit 1` before a full pass. Veo 3.1
+# (backends/veo31_vertex) was the previous choice; its clips are not comparable.
+backend: omni12
+
+# Prompt arm and repeat (wmcore/arms.py); --arm / --repeat override these.
+# The backend seed is seed_base + repeat, the same for every arm.
+arm: base
+repeat: 0
+seed_base: 0
 
 clips_dir: clips/robotrustbench
 output_dir: results/gen_robotrustbench
@@ -76,7 +87,8 @@ manifest_out: configs/manifest.robotrustbench.yaml
 modules_dir: modules
 backends_dir: backends
 modules:
-  include: ["*"]
+  # See eval.robotrustbench.yaml: segmentation and depth only.
+  include: ["instance_seg", "depth_perception"]
   exclude: []
 
 video:
@@ -95,7 +107,8 @@ limit: null
 # apportionment; see wmcore.utils.stratified_sample), so a 50-sample smoke run
 # still touches every category roughly in proportion. `limit_seed` picks which
 # items within each category — same seed, same picks, every run.
-limit_by: category
+# Inert while `limit` is null — the pilot is pinned by `frames.include` above.
+limit_by: null
 limit_seed: 0
 
 # Always dry-run first: renders every prompt against the real instructions and

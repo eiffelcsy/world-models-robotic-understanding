@@ -73,6 +73,25 @@ def safe_name(sample_id: str) -> str:
     return "".join(c if c.isalnum() or c in "-_.+=" else "_" for c in sample_id)
 
 
+def concept_fallbacks(phrase: str) -> list[str]:
+    """A segmenter concept followed by its head noun, as a second attempt.
+
+    An open-vocabulary segmenter grounds some noun phrases ("robot arm") and
+    misses others ("toilet paper", "paper towel") even at a low score threshold.
+    The head noun is the last token — the head of an English noun compound — so
+    "paper towel" -> "towel" recovers the case SAM 3 can segment. It is offered
+    only after the phrase itself returns nothing, never substituted for it: it is
+    strictly broader ("blue item" -> "item" matched 16 instances where the phrase
+    matched 1), so using it when the phrase already grounds would inflate the
+    ground truth the model is scored against.
+    """
+    phrase = phrase.strip().lower()
+    if not phrase:
+        return []
+    head = phrase.split()[-1]
+    return [phrase] if head == phrase else [phrase, head]
+
+
 def stratified_sample(items: list[T], limit: int, key: Callable[[T], Any], seed: int = 0) -> list[T]:
     """`limit` items, drawn proportionally from the distribution of `key(item)`.
 

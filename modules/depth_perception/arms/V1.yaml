@@ -1,0 +1,23 @@
+# V1: no legend. Built from paper.
+#
+# Removes the visual cue: the conditioning frame has no colour bar (run with the
+# plain frames, configs/gen.libero.yaml), and its sentence goes. The paper reports
+# Veo "specifically struggles with using a provided color map".
+#
+# Word diff against paper:
+#   ...closer to the camera. [-The exact color map to use is provided on the
+#   right side of the image.-] Static scene...
+#
+# Part of the bridging path from Wiedemer et al. (2025)'s depth prompt to this
+# probe's base prompt: paper -> V1 -> E1 -> P1 -> E2 -> C1 -> H1 -> base. Each step
+# builds on the one before and changes one slot (docs/depth_prompt_ablations.md).
+# Every step before `base` sets `negative: ""`, so the base's negatives are not
+# brought in early: adding them is the last step.
+description: paper without the legend or its sentence
+prompt:
+  params:
+    text: |
+      The image transitions to a depth-map of the scene: Darker colors represent
+      pixels further from the camera, lighter colors represent pixels closer to
+      the camera. Static scene, no pan, no zoom, no dolly.
+    negative: ""

@@ -69,6 +69,68 @@ venv/Scripts/python.exe -m pip install -r requirements.txt
 
 `--list-components` on either script prints everything registered.
 
+### Prompt arms and repeats
+
+A prompt ablation asks one probe several ways. An arm is a file in the probe's
+directory, `modules/<probe>/arms/<arm>.yaml`, holding only what differs from its
+`prompt.yaml` (and, if the decoder must change with it, from its `probe.yaml`
+`extractor`). `base` is the probe as it stands. Each arm and repeat has its own
+clips, reports and manifest, so nothing is reused across arms:
+
+```
+clips/<set>/<probe>/<arm>/r<repeat>/<sample_id>.mp4
+results/<run>/<arm>/r<repeat>/
+configs/manifest.<set>.<arm>.r<repeat>.yaml
+```
+
+```bash
+python scripts/run_gen.py  --config configs/gen.libero.yaml  --arm E1 --repeat 0
+python scripts/run_eval.py --config configs/eval.libero.yaml --arm E1 --repeat 0
+```
+
+The backend seed is `seed_base + repeat`, the same for every arm, so arms are
+compared on the same seeds. The plan is in
+[docs/segmentation_prompt_ablations.md](docs/segmentation_prompt_ablations.md).
+
+### The two eval sets
+
+| task | RoboTrustBench (real video) | LIBERO (simulated) |
+|---|---|---|
+| `instance_seg` | SAM 3 masks (estimated) | simulator masks (exact) |
+| `depth_perception` | Depth Anything 3 (estimated) | simulator depth (exact) |
+| `robot_keypoint_detection` | — | simulator link positions (exact) |
+| `robot_pose_estimation` | — | recorded end-effector pose (exact) |
+| `grasp_region_seg` | — | demonstrated grasp on the simulator's object mask |
+
+RoboTrustBench has no simulator behind it, so it keeps only the two tasks whose
+ground truth a model can reasonably estimate. The robot and grasp tasks run only
+where exact ground truth exists.
+
+### LIBERO subset
+
+20 simulated Panda episodes from
+[lerobot/libero](https://huggingface.co/datasets/lerobot/libero), 5 per suite,
+each from a different task. Every probe on this set is scored against the
+simulator itself: each sample is replayed in MuJoCo from its original LIBERO demo,
+and the conditioning frame, depth, segmentation, robot links, camera and grasped
+object are all read from that one replay. [docs/libero_ground_truth.md](docs/libero_ground_truth.md)
+has how each ground truth is obtained.
+
+`grasp_region_seg` is scored against the grasp recorded in each demonstration.
+Frames come from the approach, before the gripper first closes, so only tasks that
+start by picking one named object are used.
+
+The replay runs in its own Python 3.10 environment (`venv_libero`, MuJoCo 2.3.7,
+robosuite 1.4.1, LIBERO); setup is in the doc.
+
+```bash
+python scripts/fetch_libero.py --out data/libero
+venv_libero/bin/python scripts/libero_replay/match_demos.py
+LIBERO_CONFIG_PATH=venv_libero/.libero MUJOCO_GL=cgl venv_libero/bin/python scripts/libero_replay/render_gt.py
+python scripts/run_gen.py --config configs/gen.libero.yaml --dry-run
+python scripts/run_eval.py --config configs/eval.libero.yaml
+```
+
 ---
 
 ## The evaluation pipeline
@@ -76,18 +138,18 @@ venv/Scripts/python.exe -m pip install -r requirements.txt
 For each probe, on each sample:
 
 ```
-input frame ──▶ ground-truth source ──▶ pseudo GT ────┐
+input frame ──▶ ground-truth source ──▶ GT ───────────┐
                                                       ├──▶ metrics ──▶ scores
 output video ──▶ readout ──▶ output frame ──▶ extractor ──▶ prediction ─┘
 ```
 
-1. **Ground truth** is derived from the conditioning frame only, by whatever
-   methodology the probe defines. It never sees the generated video, so it cannot
-   be contaminated by it. Since this is the expensive stage, a source can keep
+1. **Ground truth** is derived from the conditioning frame (or, on LIBERO, the
+   simulator state behind it) only, by whatever methodology the probe defines. It
+   never sees the generated video, so it cannot be contaminated by it. Since this is the expensive stage, a source can keep
    its answers in a store — `<gt_dir>/<probe>_gt/<sample_id>_gt.npz` — which the
    pipeline reads when it is there and fills when it is not. Params are not part
    of the filename: regenerating is deleting the files, or running the module's
-   own preview tool.
+   own preview tool where it has one (`instance_seg`, `depth_perception`).
 2. **Readout** picks the one frame of the generated video carrying the answer —
    the prompts ask for an overlay to arrive and then hold still, so it is in the
    tail. `last_frame`, `fixed_time` and `most_static` ship with the pipeline.
@@ -97,7 +159,8 @@ output video ──▶ readout ──▶ output frame ──▶ extractor ──
 
 A probe that sets `best_frame` in its `probe.yaml` reports a second set of
 scores, `best_`-prefixed: the same metrics on whichever frame of the clip scores
-highest. That frame is chosen *by* the ground truth, so it is an oracle upper
+highest (the *best frame*, beside the *last frame* the readout takes). That
+frame is chosen *by* the ground truth, so it is an upper
 bound rather than a deployable score, and it is reported next to the readout's
 number rather than instead of it — the convention in
 [arXiv:2509.20328](https://arxiv.org/abs/2509.20328), where a video model is
@@ -146,6 +209,7 @@ anything, which is the right setting for a probe whose prompt names no object.
 configs/
   gen.yaml               the generation run: frames, backend, output, which modules
   eval.yaml              the evaluation run: manifest, output, ground-truth store
+  {gen,eval}.robotrustbench.yaml, {gen,eval}.libero.yaml   the two eval sets
   scan.yaml              input to make_manifest.py
   manifest.example.yaml  what a manifest looks like
 modules/                 one directory per probe   <- add and remove probes here
@@ -177,5 +241,9 @@ wmeval/
   probe.py               the four stages, per sample
   runner.py              orchestration
   report.py              aggregation -> summary.md / summary.json / scores.csv
+  simulator.py           reads a sample's simulator replay record (LIBERO)
 scripts/                 run_gen.py, run_eval.py, make_manifest.py
+  fetch_robotrustbench.py, fetch_libero.py   materialize the two eval sets
+  libero_replay/         match_demos.py, render_gt.py, review_gt.py (venv_libero)
+docs/libero_ground_truth.md   how every LIBERO ground truth is obtained
 ```

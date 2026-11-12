@@ -1,0 +1,48 @@
+# T4: the heading dot in the paper's words. Slot T.
+#
+# Diagnosis of the 2026-11-11 run: from T1 on, the green-dot sentence fixed into the
+# base on 2026-11-11 ("just beyond the tips of the two gripper fingers ...") puts the
+# green dot beside the red one, because the fingertips sit side by side in the image:
+# heading score 0.31-0.58, below the 0.893 a fixed straight-down guess gets. R1, which
+# still had the paper's phrase "a short distance in front of it, in the direction the
+# gripper is pointing", scored 0.94. This puts that phrase back. It partly reverts the
+# 2026-11-11 base fix and is reported as such.
+#
+# Word diff against T3 (the current best):
+#   The second dot is green. It sits [-just beyond the tips of the two gripper
+#   fingers, about a finger's length past them, on the straight line that runs from
+#   the back of the gripper through the middle of the fingertips.-]{+a short distance
+#   in front of the red dot, in the direction the gripper is pointing.+}
+#
+# Built from T3 (adopted 2026-11-11), one slot changed (docs/pose_prompt_ablations.md).
+description: "T4: T3 with the paper's heading phrase"
+prompt:
+  params:
+    text: |
+      This photograph stays exactly as it is: same framing, same lighting, same
+      shadows, same photographic texture and grain. Nothing in it is redrawn,
+      restyled, simplified, flattened or re-lit. The scene geometry also stays
+      the same — no objects are added, removed or changed in any way.
+
+      The camera is locked off on a tripod and does not move, pan, zoom or
+      shake. Nothing in the scene moves.
+
+      Two small, bright, fully saturated circular dots appear on the robot arm,
+      marking the orientation of its gripper.
+
+      The first dot is red. It sits exactly between the
+      two fingertips, midway between them, where a held object would be.
+
+      The second dot is green. It sits a short distance in front of
+      the red dot, in the direction the gripper is pointing.
+
+      Both dots are small compact circles a few pixels across — no lines, no
+      arrows, no rings, no labels, no text. They are the only thing that
+      changes: the robot arm, every object in the scene, the table, the floor
+      and the background all remain the untouched original photograph.
+
+      The two dots are in place by {settle_s} seconds into the clip, after which
+      the frame is completely still for the remainder of the {duration_s}
+      seconds. Static locked-off camera, one continuous shot, no cut, no zoom,
+      no pan, no dolly, no camera shake, no text, no labels, no outlines, no
+      watermark.

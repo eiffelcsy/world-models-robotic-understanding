@@ -1,0 +1,47 @@
+# E3: drop the list of things the dots are not. Slot E.
+#
+# Naming what to avoid produced it in segmentation (T1 and E4 there). The base lists
+# five things the dots are not; this removes the list. The negatives still carry
+# lines, arrows, rings and labels. The same change as robot_keypoint_detection E3,
+# so the hypothesis is tested on two probes (8 paired frames, not 4).
+#
+# Replaces T2 (the heading-anchor arm), which became a fix to the base on 2026-11-11.
+#
+# Word diff against base:
+#   Both dots are small compact circles a few pixels [-across — no lines, no
+#   arrows, no rings, no labels, no text.-]{+across.+} They are the only thing that
+#   changes: ...
+#
+# Improvement arm, built from the base prompt (prompt.yaml), one slot changed.
+# A hypothesis to run alongside the base (docs/pose_prompt_ablations.md).
+description: "E3: base without the list of things the dots are not"
+prompt:
+  params:
+    text: |
+      This photograph stays exactly as it is: same framing, same lighting, same
+      shadows, same photographic texture and grain. Nothing in it is redrawn,
+      restyled, simplified, flattened or re-lit. The scene geometry also stays
+      the same — no objects are added, removed or changed in any way.
+
+      The camera is locked off on a tripod and does not move, pan, zoom or
+      shake. Nothing in the scene moves.
+
+      Two small, bright, fully saturated circular dots appear on the robot arm,
+      marking the orientation of its gripper.
+
+      The first dot is red. It sits exactly on the center of the gripper, right
+      at the point the gripper would close on an object.
+
+      The second dot is green. It sits just beyond the tips of the two gripper
+      fingers, about a finger's length past them, on the straight line that
+      runs from the back of the gripper through the middle of the fingertips.
+
+      Both dots are small compact circles a few pixels across. They are the only thing that
+      changes: the robot arm, every object in the scene, the table, the floor
+      and the background all remain the untouched original photograph.
+
+      The two dots are in place by {settle_s} seconds into the clip, after which
+      the frame is completely still for the remainder of the {duration_s}
+      seconds. Static locked-off camera, one continuous shot, no cut, no zoom,
+      no pan, no dolly, no camera shake, no text, no labels, no outlines, no
+      watermark.

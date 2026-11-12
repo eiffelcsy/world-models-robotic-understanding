@@ -1,0 +1,20 @@
+# R1: what happens to the rest of the scene. Slot R.
+#
+# Word diff against paper:
+#   ...in the direction the gripper is pointing. [-Everything else turns pitch
+#   black.-]{+They are the only thing that changes: the robot arm, every object in
+#   the scene, the table, the floor and the background all remain the untouched
+#   original photograph.+} Static camera perspective, no zoom or pan.
+#
+# Bridging path, Wiedemer et al. (2025) Fig. 12 adapted to pose -> our base:
+# paper -> R1 -> T1 -> E1 -> K1 -> base. Each arm is the previous one with one change.
+# The base was written by design; this path measures each change afterwards
+# (docs/pose_prompt_ablations.md).
+#
+# No negatives.
+description: "R1: black background replaced by the base's rest sentence"
+prompt:
+  params:
+    text: |
+      Add a bright red dot on the center of the robot's gripper and a bright green dot a short distance in front of it, in the direction the gripper is pointing. They are the only thing that changes: the robot arm, every object in the scene, the table, the floor and the background all remain the untouched original photograph. Static camera perspective, no zoom or pan.
+    negative: ""

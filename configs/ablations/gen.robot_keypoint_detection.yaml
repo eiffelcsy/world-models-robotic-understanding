@@ -1,0 +1,36 @@
+# Prompt-ablation gen config for robot_keypoint_detection: the 4 LIBERO tune frames, seed 0, this probe only.
+# Run every arm with scripts/run_ablations.sh robot_keypoint_detection <arm> ... (docs/prompt_framework.md).
+root: ../..
+frames:
+  type: frames_dir
+  params:
+    path: ./data/libero/frames
+    pattern: '*.png'
+    meta_file: ./data/libero/meta.yaml
+    include: ./configs/libero_tune_ids.txt
+semantics:
+  type: cached
+  params:
+    overrides: configs/semantics_overrides.json
+semantics_dir: semantics/libero
+backend: omni12
+arm: base
+repeat: 0
+seed_base: 0
+clips_dir: clips/libero
+output_dir: results/ablations/robot_keypoint_detection/gen
+manifest_out: results/ablations/robot_keypoint_detection/manifest.yaml
+modules_dir: modules
+backends_dir: backends
+modules:
+  include:
+  - robot_keypoint_detection
+  exclude: []
+video:
+  duration_s: 6
+limit: null
+limit_by: null
+limit_seed: 0
+dry_run: false
+refresh: false
+fail_fast: false

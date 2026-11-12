@@ -1,0 +1,31 @@
+# T1: what to mark and how far it extends. Slot T.
+#
+# Word diff against R1:
+#   • Then, {+a flat color covers+} the {+graspable+} part of {grasp_object} {+— the
+#   region of the object+} that a robot {+gripper+} would [-grasp is covered by a-]
+#   {+close around to pick it up. The+} flat [-color,-]{+color covers only that
+#   graspable region, not the whole object,+} perfectly preserving its silhouette.
+#
+# Bridging path, adapted Wiedemer et al. (2025) segmentation prompt -> our base:
+# paper -> R1 -> T1 -> E1 -> K1 -> base. Each arm is the previous one with one change.
+# The base was written from the segmentation prompt by design; this path measures
+# each change afterwards (docs/grasp_prompt_ablations.md).
+#
+# No negatives.
+description: "T1: the base's target definition and extent"
+prompt:
+  params:
+    text: |
+      Create an animation of grasp region segmentation being performed on this photograph: the part of {grasp_object} that a robot would grasp is overlaid in a flat color.
+      Scene:
+      • The animation starts from the provided, unaltered photograph.
+      • The scene in the photograph is static and doesn't move.
+      • Then, a flat color covers the graspable part of {grasp_object} — the region of the object that a robot gripper would close around to pick it up. The flat color covers only that graspable region, not the whole object, perfectly preserving its silhouette.
+      • Everything not covered by the flat color remains the untouched original photograph: the rest of the object, every other object in the scene, the robot arm, the table surface, the floor and the background.
+      Camera:
+      • Static shot without camera movement.
+      • No pan.
+      • No rotation.
+      • No zoom.
+      • No glitches or artifacts.
+    negative: ""

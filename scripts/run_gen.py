@@ -39,11 +39,13 @@ def main() -> int:
         help="with --limit, draw proportionally from this frame.meta key's distribution "
              "(e.g. category) instead of taking the first N",
     )
+    parser.add_argument("--arm", default=None, help="prompt arm: modules/<probe>/arms/<arm>.yaml (default: the config's, else base)")
+    parser.add_argument("--repeat", type=int, default=None, help="repeat index; the backend seed is seed_base + repeat")
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.WARNING if args.quiet else logging.INFO, format="%(message)s")
-    config = load_gen_config(args.config)
+    config = load_gen_config(args.config, arm=args.arm, repeat=args.repeat)
 
     # Flags override the YAML, and only when given — so a config that already
     # says `dry_run: true` is not silently switched off by its absence here.
@@ -71,6 +73,7 @@ def main() -> int:
         return 0
 
     print(f"probes: {', '.join(p.name for p in config.prompts if p.enabled) or '<none>'}")
+    print(f"arm: {config.arm}, repeat: {config.repeat}")
     if config.refresh and not config.dry_run:
         print("--refresh: existing clips will be generated again")
     runner.run(config)

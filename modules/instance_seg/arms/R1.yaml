@@ -1,0 +1,38 @@
+# R1: 'the background fades to green' removed; everything else stays the untouched photograph.
+#
+# Bridging path, Wiedemer et al. (2025) -> our base prompt: paper -> F1 -> T2 -> R1 -> E6 -> H2
+# -> P1 -> C1 -> N1 (= base). Each arm is the previous one with one change. The base was
+# adapted from the paper's prompt by design; this path measures each change afterwards
+# (docs/segmentation_prompt_ablations.md).
+#
+# Slot changed: R.
+#
+# Word diff against T2:
+#   [-First, the background fades to green.-]
+#   {+Everything not covered by a flat color remains the untouched original photograph:+}
+#   {+every other object in the scene, the robot arm, the table surface, the floor, the walls, the background, and the shadows objects cast onto that surface.+}
+description: "R1: 'the background fades to green' removed; everything else stays the untouched photograph"
+prompt:
+  params:
+    text: |
+      Create an animation of instance segmentation being performed on this
+      photograph: each of these objects — {relevant_objects} — is overlaid in a
+      different flat color.
+
+      The animation starts from the provided, unaltered photograph. The scene in the
+      photograph is static and doesn't move.
+
+      Then, the first of these objects is covered by a flat color, perfectly
+      preserving its silhouette. Then the second object, too, is covered by a
+      different flat color, perfectly preserving its silhouette. One by one, each of
+      these objects is covered by a different flat color. Finally, all of these
+      objects are covered with different colors.
+
+      Everything not covered by a flat color remains the untouched original
+      photograph: every other object in the scene, the robot arm, the table surface,
+      the floor, the walls, the background, and the shadows objects cast onto that
+      surface.
+
+      Static shot without camera movement. No pan. No rotation. No zoom. No glitches
+      or artifacts.
+    negative: ""

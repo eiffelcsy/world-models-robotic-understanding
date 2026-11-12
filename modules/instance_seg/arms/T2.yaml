@@ -1,0 +1,35 @@
+# T2: 'each distinct entity' -> the named objects {relevant_objects}.
+#
+# Bridging path, Wiedemer et al. (2025) -> our base prompt: paper -> F1 -> T2 -> R1 -> E6 -> H2
+# -> P1 -> C1 -> N1 (= base). Each arm is the previous one with one change. The base was
+# adapted from the paper's prompt by design; this path measures each change afterwards
+# (docs/segmentation_prompt_ablations.md).
+#
+# Slot changed: T.
+#
+# Word diff against F1:
+#   each [-distinct entity-]{+of these objects — {relevant_objects} —+} is overlaid in a different flat color.
+#   Then, the first [-entity-]{+of these objects+} is covered by a flat color, perfectly preserving its silhouette.
+#   Then the second [-entity,-]{+object,+} too, is covered by a different flat color, perfectly preserving its silhouette.
+#   One by one, each [-entity-]{+of these objects+} is covered by a different flat color.
+#   Finally, all [-entities-]{+of these objects+} are covered with different colors.
+description: "T2: 'each distinct entity' -> the named objects {relevant_objects}"
+prompt:
+  params:
+    text: |
+      Create an animation of instance segmentation being performed on this
+      photograph: each of these objects — {relevant_objects} — is overlaid in a
+      different flat color.
+
+      The animation starts from the provided, unaltered photograph. The scene in the
+      photograph is static and doesn't move.
+
+      First, the background fades to green. Then, the first of these objects is
+      covered by a flat color, perfectly preserving its silhouette. Then the second
+      object, too, is covered by a different flat color, perfectly preserving its
+      silhouette. One by one, each of these objects is covered by a different flat
+      color. Finally, all of these objects are covered with different colors.
+
+      Static shot without camera movement. No pan. No rotation. No zoom. No glitches
+      or artifacts.
+    negative: ""

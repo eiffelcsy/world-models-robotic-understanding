@@ -1,0 +1,55 @@
+name: robot_keypoint_detection
+description: >
+  A small, bright, fully saturated dot on each joint of the robot arm and then
+  held still. Everything else stays the untouched photograph. This is the asking
+  half of the convention extractor.py decodes.
+
+enabled: true
+
+prompt:
+  type: template
+  params:
+    # Slots (docs/prompt_framework.md): P, C | T+E | R | H
+    text: |
+      This photograph stays exactly as it is: same framing, same lighting, same
+      shadows, same photographic texture and grain. Nothing in it is redrawn,
+      restyled, simplified, flattened or re-lit. The scene geometry also stays
+      the same — no objects are added, removed or changed in any way.
+
+      The camera is locked off on a tripod and does not move, pan, zoom or
+      shake. Nothing in the scene moves.
+
+      One at a time, a small, bright, fully saturated circular dot appears on
+      each joint of the robot arm — the rotating joints where one rigid link
+      meets the next, from the base all the way to the gripper. Each dot is a
+      different vivid color, sits exactly on its joint, and is small: a compact
+      circle a few pixels across, not a line, not a ring, not an arrow, not a
+      label. There is one dot per joint and nothing else is marked.
+
+      The dots are the only thing that changes. The robot arm itself, every
+      object in the scene, the table, the floor and the background all remain
+      the untouched original photograph.
+
+      All dots are in place by {settle_s} seconds into the clip, after which the
+      frame is completely still for the remainder of the {duration_s} seconds.
+      Static locked-off camera, one continuous shot, no cut, no zoom, no pan,
+      no dolly, no camera shake, no text, no labels, no outlines, no watermark.
+
+    negative: >
+      camera motion, panning, zooming, handheld shake, moving objects, shading,
+      gradients, textures, highlights, outlines, edges, lines, arrows, rings,
+      text, labels, captions, pale colors, pastel colors, white dots, black
+      dots, grey dots, transparency
+
+video:
+  duration_s: 6
+  aspect_ratio: "16:9"
+  resolution: 720p
+
+checks:
+  - type: playable
+    params:
+      min_frames: 24
+  - type: changed
+    params:
+      min_change: 0.0

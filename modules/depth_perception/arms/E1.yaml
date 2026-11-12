@@ -1,0 +1,33 @@
+# E1: the base's brightness encoding. Built from V1.
+#
+# Slot E. "Darker colors represent pixels further from the camera, lighter colors
+# represent pixels closer to the camera" -> the base's paragraph: depth as
+# brightness only, near white, grading smoothly to black, one shade per distance.
+# The colon sentence is split so that paragraph stands on its own.
+#
+# Word diff against V1:
+#   The image transitions to a depth-map of the [-scene: Darker colors represent
+#   pixels further from the camera, lighter colors represent pixels closer to the
+#   camera.-] {+scene. / Depth is shown only as brightness and nothing else.
+#   Surfaces closest to the camera are the brightest — near white. Surfaces further
+#   away are darker, grading smoothly to black at the far end of the scene. A
+#   surface at one distance is one flat shade everywhere it appears.+} Static scene...
+#
+# Part of the bridging path from Wiedemer et al. (2025)'s depth prompt to this
+# probe's base prompt: paper -> V1 -> E1 -> P1 -> E2 -> C1 -> H1 -> base. Each step
+# builds on the one before and changes one slot (docs/depth_prompt_ablations.md).
+# Every step before `base` sets `negative: ""`, so the base's negatives are not
+# brought in early: adding them is the last step.
+description: V1 with the base's brightness paragraph
+prompt:
+  params:
+    text: |
+      The image transitions to a depth-map of the scene.
+
+      Depth is shown only as brightness and nothing else. Surfaces closest to the
+      camera are the brightest — near white. Surfaces further away are darker,
+      grading smoothly to black at the far end of the scene. A surface at one
+      distance is one flat shade everywhere it appears.
+
+      Static scene, no pan, no zoom, no dolly.
+    negative: ""

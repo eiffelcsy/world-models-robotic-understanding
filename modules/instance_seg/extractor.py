@@ -13,7 +13,7 @@ generation, score each one against the SAM 3 ground truth for the frame it was
 conditioned on, and report two numbers — the best frame in the clip, and the last
 frame. The gap between them is the thing worth looking at. The last frame is what
 an honest readout can reach, since it does not consult the ground truth; the best
-frame uses the ground truth to choose and is therefore an oracle upper bound, not
+frame uses the ground truth to choose and is therefore an upper bound, not
 a score the model earned. Reported side by side, they separate "the model never
 understood the scene" from "the model understood it and then drifted".
 
@@ -25,6 +25,7 @@ cannot be both imported and run as `-m` without registering twice.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -40,6 +41,13 @@ from .metrics import MaskSet, score_masks
 
 # OpenCV packs hue into 0..179, half a degree per step; params are in degrees.
 HUE_STEPS = 180
+IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".bmp", ".webp")
+
+
+@lru_cache(maxsize=4)
+def _read_reference(path: str) -> np.ndarray:
+    """The conditioning frame, read once per clip rather than once per scanned frame."""
+    return read_image(path)
 
 
 @register("extractor", "color_instances")
@@ -62,12 +70,19 @@ class ColorInstances(Extractor):
       merge_hue       peaks closer than this (degrees) are one color
       hue_tolerance   a pixel further than this (degrees) from every peak is
                       dropped rather than forced into the nearest color
-      hue_min_frac    a color must hold this fraction of the painted pixels
+      (a color needs at least min_area_frac of the frame within its hue
+      window: the same floor as a component, so one object's size never
+      decides whether another object's color is seen)
       max_colors      cap on distinct colors considered
       cleanup         morphological open+close kernel (px) on each color mask
       min_area_frac   drop components below this fraction of the frame
       max_area_frac   drop components above it — that is a repainted background
       max_instances   keep at most this many, largest first
+      min_change      a painted pixel must also differ from the conditioning
+                      frame by this much (max over RGB, 0-255). Without it a
+                      saturated object the model never touched counts as paint:
+                      8 of the 20 untouched LIBERO frames decoded to at least one
+                      instance. 0 turns the check off
 
     What it deliberately cannot see: an object the model painted white, black or
     grey. Hue is undefined there and the pixels are indistinguishable from an
@@ -82,12 +97,12 @@ class ColorInstances(Extractor):
         hue_smooth: float = 10.0,
         merge_hue: float = 24.0,
         hue_tolerance: float = 20.0,
-        hue_min_frac: float = 0.005,
         max_colors: int = 32,
         cleanup: int = 5,
         min_area_frac: float = 0.001,
         max_area_frac: float = 0.9,
         max_instances: int = 20,
+        min_change: float = 0.0,
     ) -> None:
         super().__init__(
             min_saturation=min_saturation,
@@ -96,24 +111,38 @@ class ColorInstances(Extractor):
             hue_smooth=hue_smooth,
             merge_hue=merge_hue,
             hue_tolerance=hue_tolerance,
-            hue_min_frac=hue_min_frac,
             max_colors=max_colors,
             cleanup=cleanup,
             min_area_frac=min_area_frac,
             max_area_frac=max_area_frac,
             max_instances=max_instances,
+            min_change=min_change,
         )
 
     def __call__(self, frame: np.ndarray, sample: Sample, ctx: RunContext) -> ProbeData:
-        masks, info = self.decode(frame)
+        masks, info = self.decode(frame, self._reference(sample))
         return ProbeData("instances", {"masks": masks}, info)
 
-    def decode(self, frame: np.ndarray) -> tuple[list[np.ndarray], dict[str, Any]]:
-        """The whole decoder, usable without a Sample — the video scan calls this."""
+    def _reference(self, sample: Sample) -> np.ndarray | None:
+        """The conditioning frame, when the change check is on and there is one to read."""
+        if self.min_change <= 0 or Path(sample.input_frame).suffix.lower() not in IMAGE_SUFFIXES:
+            return None
+        return _read_reference(str(Path(sample.input_frame).resolve()))
+
+    def decode(
+        self, frame: np.ndarray, reference: np.ndarray | None = None
+    ) -> tuple[list[np.ndarray], dict[str, Any]]:
+        """The whole decoder, usable without a Sample — the video scan calls this.
+
+        `reference` is the conditioning frame; with `min_change` above 0, a pixel
+        only counts as painted where it differs from it.
+        """
         height, width = frame.shape[:2]
         pixels = height * width
 
         hue, painted = self._painted(frame)
+        if reference is not None and self.min_change > 0:
+            painted &= self._changed(frame, reference)
         n_painted = int(np.count_nonzero(painted))
         info: dict[str, Any] = {
             "source": "color_instances",
@@ -123,7 +152,7 @@ class ColorInstances(Extractor):
         if not n_painted:
             return [], {**info, "n_instances": 0, "n_colors": 0, "hues": [], "areas": []}
 
-        peaks = self._colors(hue[painted], n_painted)
+        peaks = self._colors(hue[painted], pixels)
         labels = self._assign(hue, painted, peaks)
 
         instances: list[tuple[int, int, np.ndarray]] = []  # area, hue, mask
@@ -153,12 +182,32 @@ class ColorInstances(Extractor):
         )
         return hsv[..., 0], painted
 
-    def _colors(self, hues: np.ndarray, n_painted: int) -> list[int]:
-        """Hue histogram -> the peaks that are distinct enough to be separate colors."""
-        counts = _circular_smooth(
-            np.bincount(hues, minlength=HUE_STEPS).astype(float), self.hue_smooth * HUE_STEPS / 360
-        )
-        floor = max(1.0, self.hue_min_frac * n_painted)
+    def _changed(self, frame: np.ndarray, reference: np.ndarray) -> np.ndarray:
+        """Pixels that moved at least `min_change` from the conditioning frame."""
+        height, width = frame.shape[:2]
+        if reference.shape[:2] != (height, width):
+            reference = resize_to(reference, (height, width))
+        ksize = int(self.smooth)
+        if ksize >= 3:
+            frame = cv2.medianBlur(frame, ksize + 1 - ksize % 2)
+            reference = cv2.medianBlur(np.ascontiguousarray(reference), ksize + 1 - ksize % 2)
+        change = np.abs(frame.astype(np.int16) - reference.astype(np.int16)).max(axis=2)
+        return change >= self.min_change
+
+    def _colors(self, hues: np.ndarray, pixels: int) -> list[int]:
+        """Hue histogram -> the peaks that are distinct enough to be separate colors.
+
+        A peak counts if its hue window holds at least `min_area_frac` of the
+        frame, the smallest object a component may be. The floor is absolute on
+        purpose: it was once a fraction of all painted pixels, and then a large
+        painted object (a cabinet) hid a small one beside it (a bottle) whose
+        paint was perfectly decodable (docs/segmentation_prompt_ablations.md).
+        """
+        span = self.hue_smooth * HUE_STEPS / 360
+        counts = _circular_smooth(np.bincount(hues, minlength=HUE_STEPS).astype(float), span)
+        # `counts` is a box average over `span` bins, so a window holding N pixels
+        # peaks at about N / span.
+        floor = max(1.0, self.min_area_frac * pixels / max(1.0, round(span)))
         separation = self.merge_hue * HUE_STEPS / 360
 
         peaks: list[int] = []

@@ -18,7 +18,7 @@ backend types cover how video models are actually called:
     command     a templated subprocess                  (local / self-hosted)
     local_dir   adopt clips generated elsewhere         (by hand, or recovery)
 
-See `backends/veo3/backend.yaml` for a worked `http_job` and
+See `backends/omni12/backend.yaml` for a worked `http_job` and
 `wmgen/backends.py` for what each type accepts.
 
 When a model genuinely cannot be reached that way — an SDK that signs requests,

@@ -1,0 +1,20 @@
+# R1: what happens to the rest of the scene. Slot R.
+#
+# Word diff against paper:
+#   ...joint of the robot arm. [-Everything else turns pitch black.-]{+The dots are
+#   the only thing that changes. The robot arm itself, every object in the scene,
+#   the table, the floor and the background all remain the untouched original
+#   photograph.+} Static camera perspective, no zoom or pan.
+#
+# Bridging path, adapted Wiedemer et al. (2025) keypoint prompt -> our base:
+# paper -> R1 -> T1 -> E1 -> K1 -> base. Each arm is the previous one with one change.
+# The base was written by design; this path measures each change afterwards
+# (docs/keypoint_prompt_ablations.md).
+#
+# No negatives.
+description: "R1: black background replaced by the base's rest paragraph"
+prompt:
+  params:
+    text: |
+      Add a bright dot of a different color on each joint of the robot arm. The dots are the only thing that changes. The robot arm itself, every object in the scene, the table, the floor and the background all remain the untouched original photograph. Static camera perspective, no zoom or pan.
+    negative: ""

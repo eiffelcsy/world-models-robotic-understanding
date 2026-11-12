@@ -1,0 +1,27 @@
+# paper: Wiedemer et al. (2025) keypoint-localization prompt (Fig. 12), adapted to pose.
+#
+# No published prompt asks a video model for a robot's pose (docs/pose_prompt_ablations.md,
+# section 1). The base uses Fig. 12's convention, coloured dots at named points, so the
+# baseline is that prompt with the fewest edits that make it this task, as for the
+# keypoint probe's `paper` arm. Theirs: "Add a bright blue dot at the tip of the
+# branch on which the macaw is sitting. The macaw's eye turns bright red. Everything
+# else turns pitch black. Static camera perspective, no zoom or pan." Their two named
+# points, each with its own colour, become the grip point (red) and a point ahead of
+# it along the gripper's pointing direction (green). The red and green match the
+# decoder's palette, which a published prompt would not know; that is the one
+# concession to our decoder. "Everything else turns pitch black" and the camera
+# sentence are verbatim.
+#
+# Bridging path, Wiedemer et al. (2025) Fig. 12 adapted to pose -> our base:
+# paper -> R1 -> T1 -> E1 -> K1 -> base. Each arm is the previous one with one change.
+# The base was written by design; this path measures each change afterwards
+# (docs/pose_prompt_ablations.md).
+#
+# Slot changed: none (new baseline). No negatives. The black background fails the
+# scene-preservation gate by design; the gate is waived for this arm only.
+description: "paper: Wiedemer et al. (2025) keypoint prompt adapted to gripper pose, black background"
+prompt:
+  params:
+    text: |
+      Add a bright red dot on the center of the robot's gripper and a bright green dot a short distance in front of it, in the direction the gripper is pointing. Everything else turns pitch black. Static camera perspective, no zoom or pan.
+    negative: ""

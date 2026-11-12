@@ -1,0 +1,45 @@
+# T3: where the position dot goes. Slot T.
+#
+# The ground truth position is robot0_eef_pos, the grip site between the fingers
+# (README). "the center of the gripper" can be read as the gripper body or the
+# wrist above it. Names the visible spot instead.
+#
+# Word diff against base:
+#   The first dot is red. It sits exactly [-on the center of the gripper, right at
+#   the point the gripper would close on an object.-]{+between the two fingertips,
+#   midway between them, where a held object would be.+}
+#
+# Improvement arm, built from the base prompt (prompt.yaml), one slot changed.
+# A hypothesis to run alongside the base (docs/pose_prompt_ablations.md).
+description: "T3: base with the grip-point dot between the fingertips"
+prompt:
+  params:
+    text: |
+      This photograph stays exactly as it is: same framing, same lighting, same
+      shadows, same photographic texture and grain. Nothing in it is redrawn,
+      restyled, simplified, flattened or re-lit. The scene geometry also stays
+      the same — no objects are added, removed or changed in any way.
+
+      The camera is locked off on a tripod and does not move, pan, zoom or
+      shake. Nothing in the scene moves.
+
+      Two small, bright, fully saturated circular dots appear on the robot arm,
+      marking the orientation of its gripper.
+
+      The first dot is red. It sits exactly between the
+      two fingertips, midway between them, where a held object would be.
+
+      The second dot is green. It sits just beyond the tips of the two gripper
+      fingers, about a finger's length past them, on the straight line that
+      runs from the back of the gripper through the middle of the fingertips.
+
+      Both dots are small compact circles a few pixels across — no lines, no
+      arrows, no rings, no labels, no text. They are the only thing that
+      changes: the robot arm, every object in the scene, the table, the floor
+      and the background all remain the untouched original photograph.
+
+      The two dots are in place by {settle_s} seconds into the clip, after which
+      the frame is completely still for the remainder of the {duration_s}
+      seconds. Static locked-off camera, one continuous shot, no cut, no zoom,
+      no pan, no dolly, no camera shake, no text, no labels, no outlines, no
+      watermark.

@@ -13,8 +13,9 @@ gt_dir: results
 # Probes are discovered here: every subdirectory holding a probe.yaml.
 modules_dir: modules
 modules:
-  include: ["*"]   # name globs, e.g. ["depth_*", "contact_detection"]
-  exclude: []      # or set `enabled: false` in a module's probe.yaml
+  include: ["*"]   # name globs, e.g. ["depth_*", "instance_seg"]
+  # Their ground truth comes from a simulator replay; LIBERO only.
+  exclude: ["robot_keypoint_detection", "robot_pose_estimation", "grasp_region_seg"]
 
 # null = every sample in the manifest. Set a small number for a smoke run.
 limit: null

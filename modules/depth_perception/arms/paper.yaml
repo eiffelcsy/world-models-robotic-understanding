@@ -1,0 +1,22 @@
+# paper: Wiedemer et al. (2025), Fig. 62 (App. D, a failure case), verbatim.
+#
+# Their prompt points at a colour map "provided on the right side of the image",
+# a vertical magma bar pasted onto the input. Run this arm with the frames that
+# carry that bar, configs/gen.libero.depth_legend.yaml
+# (scripts/make_depth_legend_frames.py); with the plain frames the sentence would
+# point at nothing.
+#
+# Part of the bridging path from Wiedemer et al. (2025)'s depth prompt to this
+# probe's base prompt: paper -> V1 -> E1 -> P1 -> E2 -> C1 -> H1 -> base. Each step
+# builds on the one before and changes one slot (docs/depth_prompt_ablations.md).
+# Every step before `base` sets `negative: ""`, so the base's negatives are not
+# brought in early: adding them is the last step.
+description: Wiedemer et al. (2025) depth prompt, verbatim, with their magma legend
+prompt:
+  params:
+    text: |
+      The image transitions to a depth-map of the scene: Darker colors represent
+      pixels further from the camera, lighter colors represent pixels closer to
+      the camera. The exact color map to use is provided on the right side of the
+      image. Static scene, no pan, no zoom, no dolly.
+    negative: ""

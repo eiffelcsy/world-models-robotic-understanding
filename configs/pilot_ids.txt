@@ -1,0 +1,65 @@
+# RoboTrustBench evaluation set: 20 samples, Normal and constrained tasks only.
+#
+# Revised 2026-11-09. RoboTrustBench now runs segmentation and depth only, and
+# only on tasks whose instruction names a concrete object: A_Normal, and the
+# B_Constraint-sensitive subcategories that are constraints rather than vague
+# wording (distractor near target, reachable only along a particular trajectory,
+# target occluded, receptacle occluded, obstacles). Counterfactual, adversarial
+# and underspecified (pronoun, generic object, multiple valid targets, implicit
+# destination) samples were removed: their instruction does not say which object
+# to segment, so they have no well-defined ground truth.
+#
+# Kept from the 2026-10 pilot: its 9 A_Normal and 2 eligible B samples.
+# Added: one sample from each of the 3 B subcategories the pilot lacked, then
+# A_Normal samples to 20, drawn with random.Random(0) from the sorted ids whose
+# cached semantics name a target object with confidence >= 0.7. The result keeps
+# the eligible pool's mix (533 A : 181 B = 75 % A) -> 15 A, 5 B.
+# Removed from the pilot: AUTOLab+0d4edc83+2023-10-27-19h-53m-35s__B_Constraint-
+#   sensitive-Underspecified_Pronoun_reference,
+#   IPRL+7790ec0a+2023-05-13-09h-40m-28s__B_Constraint-sensitive-
+#   Underspecified_Multiple_valid_targets,
+#   IPRL+89b42cd2+2023-11-24-20h-28m-40s__C_Counterfactual-Object_absence,
+#   IRIS+7dfa2da3+2023-04-27-15h-54m-50s__B_Constraint-sensitive-
+#   Underspecified_Generic_object,
+#   IRIS+7dfa2da3+2023-05-18-14h-38m-14s__C_Counterfactual-Goal_inconsistency,
+#   PennPAL+acda9df3+2023-07-15-23h-28m-56s__D_Adversarial-Environmental_damage,
+#   TRI+52ca9b6a+2023-11-27-14h-29m-08s__C_Counterfactual-Object_absence,
+#   TRI+52ca9b6a+2023-11-27-15h-42m-09s__C_Counterfactual-
+#   Geometric_impossibility, TRI+52ca9b6a+2024-01-29-15h-11m-15s__B_Constraint-
+#   sensitive-Underspecified_Pronoun_reference
+##
+# Replaced 2026-11-09: IPRL+5085c3ce+2023-10-21-17h-45m-44s__A_Normal ("take the
+# black hoodie out of the box"; SAM 3 finds no "black hoodie", so it has no ground
+# truth). The replacement continues the same random.Random(0) A_Normal draw after
+# the 9 additions above, taking the first sample whose SAM 3 ground truth has
+# exactly one instance per object the semantics name, and that is right by eye.
+# Skipped, in draw order:
+#   TRI+52ca9b6a+2024-02-08-11h-04m-19s__A_Normal    "close the drawer": 5 drawers in view
+#   TRI+52ca9b6a+2023-11-27-10h-31m-48s__A_Normal    coffee beans not found; 2 spoons
+#   TRI+52ca9b6a+2023-12-07-14h-25m-15s__A_Normal    green knife not found
+#   IRIS+7dfa2da3+2023-05-23-11h-04m-00s__A_Normal   masks a background whiteboard (by eye)
+#   RAIL+d027f2ae+2023-11-14-19h-15m-53s__A_Normal   4 cabinet doors in view
+# Taken: IRIS+938130c4+2023-07-14-16h-31m-21s__A_Normal ("pick up the black mug
+# from the desk").
+# `frames_dir` with `include:` reads this file. One sample id per line; blank
+# lines and `#` comments are ignored.
+AUTOLab+44bb9c36+2023-11-25-12h-52m-06s__A_Normal
+AUTOLab+7cb094d5+2023-12-15-18h-58m-11s__A_Normal
+IPRL+5085c3ce+2023-10-11-23h-14m-36s__A_Normal
+IRIS+226b9f35+2023-07-11-22h-02m-09s__A_Normal
+IRIS+7dfa2da3+2023-05-25-13h-35m-00s__A_Normal
+IRIS+938130c4+2023-07-14-16h-31m-21s__A_Normal
+PennPAL+c5f808b7+2023-10-30-00h-45m-27s__A_Normal
+RAD+62828209+2023-09-09-06h-47m-11s__A_Normal
+RAIL+daf8a660+2023-08-31-15h-26m-57s__A_Normal
+RAIL+daf8a660+2023-10-12-12h-05m-57s__B_Constraint-sensitive-Object_reachable_only_with_a_particular_trajectory
+RAIL+eh61f232+2023-10-26-17h-06m-22s__A_Normal
+REAL+4f8ca688+2023-05-20-12h-00m-42s__B_Constraint-sensitive-Distractor_object_near_target
+REAL+4f8ca688+2023-07-25-13h-22m-54s__A_Normal
+RPL+cb4f6842+2023-05-23-13h-20m-00s__B_Constraint-sensitive-Obscured_The_target_receptacle_is_occluded
+TRI+52ca9b6a+2023-10-26-14h-19m-13s__A_Normal
+TRI+52ca9b6a+2023-11-06-17h-07m-01s__B_Constraint-sensitive-Obscured_The_target_object_is_occluded
+TRI+52ca9b6a+2023-11-20-15h-22m-26s__B_Constraint-sensitive-Obstacles
+TRI+52ca9b6a+2024-01-30-14h-53m-13s__A_Normal
+Tue_Jan_2_11_25_42_2024__A_Normal
+Tue_Jul_4_15_15_17_2023__A_Normal

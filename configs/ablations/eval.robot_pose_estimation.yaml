@@ -1,0 +1,13 @@
+# Prompt-ablation eval config for robot_pose_estimation: the 4 LIBERO tune frames, seed 0, this probe only.
+# Run every arm with scripts/run_ablations.sh robot_pose_estimation <arm> ... (docs/prompt_framework.md).
+root: ../..
+manifest: results/ablations/robot_pose_estimation/manifest.yaml
+output_dir: results/ablations/robot_pose_estimation/eval
+gt_dir: results/libero
+modules_dir: modules
+modules:
+  include:
+  - robot_pose_estimation
+  exclude: []
+limit: null
+fail_fast: false

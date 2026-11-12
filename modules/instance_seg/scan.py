@@ -11,7 +11,7 @@ the extractor against it.
 
 Prints two lines. `last` is the frame a readout can honestly reach — it does not
 consult the ground truth to find it. `best` is chosen by the ground truth and is
-an oracle upper bound: what the clip contained at its best moment, not what the
+an upper bound: what the clip contained at its best moment, not what the
 model can be scored on. Writes `<out>/<stem>_best.png` and `_last.png` — the
 decoded instances tinted over the generated frame they came from — plus
 `<stem>_scan.json` with the score of every frame, which is the curve to look at

@@ -1,0 +1,103 @@
+# Gemini Omni 1.2 Flash through the Gemini API's Interactions API, as an HTTP job.
+#
+# Sources, checked 2026-11-09:
+#   https://aistudio.google.com/docs/omni                          (guide, REST examples)
+#   https://aistudio.google.com/api-reference/interactions-api     (GenerationConfig)
+#   https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/video/generate-videos-from-an-image
+#
+# Why the Gemini API and not Vertex: Vertex's Omni examples take the image only
+# as a Cloud Storage `uri`, so every frame would first need an upload. The
+# Gemini API takes it inline as base64, like the Veo backends did.
+#
+# Seed: `generation_config.seed`, an integer, "Seed used in decoding for
+# reproducibility" (API reference); the Cloud page says "for reproducible
+# results". Neither gives a range or promises the same video for the same seed,
+# so this was checked: on 2026-11-09 two seed-0 clips of the same request came
+# back identical up to encoder noise (painted-region IoU 0.99, same score). A
+# retry with the same seed is therefore the same clip. wmgen sends
+# seed_base + repeat, the same for every prompt arm.
+#
+# First frame: `task: image_to_video` makes the first image the starting frame.
+# Without `task` the model picks a mode from the prompt and may treat the frame
+# as a loose reference, which would break every probe. Keep it.
+#
+# No negative-prompt field: Omni rejects negative prompts, and Google says to
+# write them into the prompt. `{prompt_and_negative}` is the probe's prompt with
+# its `negative:` appended after one fixed sentence (NEGATIVE_LEAD in
+# wmgen/backends.py), so every arm carries it the same way.
+#
+# Audio is always generated and cannot be switched off; the probes ignore it.
+#
+# Pin the model id. `gemini-omni-1.1-flash` is routed to 1.2 on 2026-12-03, and
+# the docs do not say whether 1.2 is preview or GA, so it may move under you as
+# Veo 3.1 preview did. The id is written into every clip's sidecar.
+#
+# Before a run, in the shell (never in this file):
+#   export GEMINI_API_KEY=<key>
+#
+# VERIFIED 2026-11-09 with one live clip (instance_seg, libero_spatial__ep1520_f030,
+# seed 0): the create returned the id at `id`, the poll ended on "completed"
+# after ~42 s, and the video came back at
+# steps[type=model_output].content[type=video].data (1280x720, 24 fps, 144
+# frames, first frame within compression noise of the input). The finished
+# interaction also carries a "thought" step and `usage` token counts.
+# Failure confirmed 2026-11-09: a failed job reports `status: "failed"` with the
+# reason in `errors` (seen: DEADLINE_EXCEEDED, a server-side timeout that is not
+# charged; resend the same request). A transient HTTP 403 on submit also occurred
+# once and succeeded on resend.
+
+name: omni12
+type: http_job
+
+params:
+  model_id: gemini-omni-1.2-flash
+
+  headers:
+    x-goog-api-key: "${GEMINI_API_KEY}"
+
+  submit:
+    url: https://generativelanguage.googleapis.com/v1beta/interactions
+    method: POST
+    body:
+      model: gemini-omni-1.2-flash
+      # Asynchronous: the create returns at once and the clip is fetched by id.
+      # `store` keeps the interaction so the GET below can find it (kept up to
+      # 7 days).
+      background: true
+      store: true
+      input:
+        - type: image
+          data: "{image_b64}"
+          mime_type: "{image_mime}"
+        - type: text
+          text: "{prompt_and_negative}"
+      response_format:
+        type: video
+        aspect_ratio: "{aspect_ratio}"
+        resolution: "{resolution}"
+        duration: "{duration_s}s"     # a string, whole seconds 3-15
+      generation_config:
+        seed: "{seed}"                # dropped from the request when no seed is set
+        video_config:
+          task: image_to_video
+    job_id_path: id
+
+  poll:
+    url: https://generativelanguage.googleapis.com/v1beta/interactions/{job_id}
+    method: GET
+    interval_s: 10
+    timeout_s: 900
+    done_path: status
+    done_values: [completed]
+    failed_values: [failed, cancelled, canceled, incomplete]
+    error_path: error
+
+  fetch:
+    b64_path: steps[type=model_output].content[type=video].data
+
+  retries: 3
+
+defaults:
+  duration_s: 6
+  aspect_ratio: "16:9"
+  resolution: 720p

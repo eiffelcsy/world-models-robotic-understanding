@@ -204,13 +204,16 @@ class ClipCheck(Component):
         raise NotImplementedError
 
 
-def clip_for(clips_dir: Path, probe: str, sample_id: str, ext: str = ".mp4") -> Path:
-    """Where a clip lives: `<clips_dir>/<probe>/<sample_id>.mp4`.
+def clip_for(clips_dir: Path, probe: str, sample_id: str, ext: str = ".mp4", subdir: Path | str = "") -> Path:
+    """Where a clip lives: `<clips_dir>/<probe>/<subdir>/<sample_id>.mp4`.
+
+    `subdir` is `<arm>/r<repeat>` (wmcore/arms.py), so every prompt arm and
+    repeat has its own folder and never reuses another's clip.
 
     This is exactly the layout `wmeval.manifest.scan_run_dir` expects, so a run
     directory built here is one a hand-written manifest scan also understands.
     """
-    return Path(clips_dir) / probe / f"{safe_name(sample_id)}{ext}"
+    return Path(clips_dir) / probe / subdir / f"{safe_name(sample_id)}{ext}"
 
 
 __all__ = [

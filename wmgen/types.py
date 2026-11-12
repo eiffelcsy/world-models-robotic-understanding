@@ -113,4 +113,6 @@ class GenContext:
     semantics_dir: Path | None = None  # the slot store; None = resolve every run
     refresh: bool = False  # regenerate clips that already exist
     dry_run: bool = False  # render prompts, call no backend
+    #: `<arm>/r<repeat>` under each probe's clip folder (wmcore/arms.py)
+    clip_subdir: Path = Path("base/r0")
     extras: dict[str, Any] = field(default_factory=dict)

@@ -105,6 +105,11 @@ def _fill(node: Any, fields: dict[str, Any]) -> Any:
 def _dig(obj: Any, path: str) -> Any:
     """Read `a.b[0].c` out of a decoded JSON response.
 
+    An index may also be a match, `steps[type=model_output]`: the first item of
+    the list whose `type` is `model_output`. Some APIs return a list whose order
+    is not fixed (a "thought" step that may or may not come before the output),
+    so a position would point at the wrong item.
+
     Returns None for a path that is not there, because "not there yet" is the
     normal state of a job being polled.
     """
@@ -116,6 +121,13 @@ def _dig(obj: Any, path: str) -> Any:
                 part = ""
             if obj is None:
                 return None
+            if "=" in index:
+                key, _, value = index.partition("=")
+                matches = [item for item in obj if isinstance(item, dict) and str(item.get(key)) == value] if isinstance(obj, list) else []
+                if not matches:
+                    return None
+                obj = matches[0]
+                continue
             try:
                 obj = obj[int(index)]
             except (IndexError, TypeError, ValueError):
@@ -129,6 +141,16 @@ def _dig(obj: Any, path: str) -> Any:
     return obj
 
 
+NEGATIVE_LEAD = "The clip must not contain any of the following:"
+
+
+def _with_negative(text: str, negative: str) -> str:
+    text, negative = text.strip(), " ".join(negative.split())
+    if not negative:
+        return text
+    return f"{text}\n\n{NEGATIVE_LEAD} {negative.rstrip('.')}."
+
+
 def _request_fields(request: Request) -> dict[str, Any]:
     """Everything a backend template can refer to."""
     image = request.frame.path.read_bytes()
@@ -138,10 +160,16 @@ def _request_fields(request: Request) -> dict[str, Any]:
         "probe": request.probe,
         "prompt": request.prompt.text,
         "negative": request.prompt.negative,
+        # For a model with no negative-prompt field (Gemini Omni): the negative
+        # rides at the end of the prompt, in one fixed wording for every arm.
+        "prompt_and_negative": _with_negative(request.prompt.text, request.prompt.negative),
         "image": str(request.frame.path),
         "image_b64": base64.b64encode(image).decode("ascii"),
         "image_mime": mime,
         "out": str(request.dest),
+        # No seed set (`seed_base: null`): `{seed}` fills as None and _fill drops
+        # the key, rather than failing on a missing placeholder.
+        "seed": None,
         **request.video,
     }
 
@@ -198,11 +226,17 @@ class HttpJob(VideoBackend):
     """Submit a generation job over REST, poll it, download the result.
 
     The whole vendor contract is four blocks of YAML — see
-    `backends/veo3/backend.yaml` for a worked example:
+    `backends/omni12/backend.yaml` for a worked example:
 
         submit: {url, method, body, job_id_path}
-        poll:   {url, interval_s, timeout_s, done_path, error_path}
+        poll:   {url, method?, body?, interval_s, timeout_s, done_path, error_path,
+                 done_values?, failed_values?}
         fetch:  {url_path}  or  {b64_path}
+
+    Without `done_values` the job is done once `done_path` holds anything true
+    (an operation's `done: true`). With it, `done_path` is a status string: done
+    when it is one of `done_values`, failed when it is one of `failed_values`.
+    Paths may match list items by field, `steps[type=model_output]`.
         headers: {"x-goog-api-key": "${GEMINI_API_KEY}"}
 
     Strings anywhere in those blocks are templated with the request (`{prompt}`,
@@ -260,16 +294,31 @@ class HttpJob(VideoBackend):
         deadline = time.time() + float(spec.get("timeout_s", 900))
         done_path = spec.get("done_path", "done")
         error_path = spec.get("error_path", "error")
+        done_values = spec.get("done_values")
+        failed_values = list(spec.get("failed_values") or [])
 
         while True:
             response = json.loads(
-                _http(url, method=spec.get("method", "GET"), headers=self._headers(fields), retries=self.retries)
+                _http(
+                    url,
+                    method=spec.get("method", "GET"),
+                    headers=self._headers(fields),
+                    body=_fill(spec.get("body"), fields),  # a POST poll (Vertex fetchPredictOperation)
+                    retries=self.retries,
+                )
             )
             failure = _dig(response, error_path)
             if failure:
                 raise IOError(f"backend job failed: {json.dumps(failure)[:400]}")
-            if _dig(response, done_path):
-                return response
+            state = _dig(response, done_path)
+            if done_values is None:
+                if state:  # a flag: Vertex and Gemini operations set `done: true`
+                    return response
+            else:  # a status string: the Interactions API sets `status: "completed"`
+                if state in failed_values:
+                    raise IOError(f"backend job {job_id} ended as {state!r}: {json.dumps(response)[:400]}")
+                if state in done_values:
+                    return response
             if time.time() > deadline:
                 raise TimeoutError(f"job {job_id} still running after {spec.get('timeout_s', 900)}s")
             time.sleep(interval)

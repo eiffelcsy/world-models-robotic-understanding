@@ -15,12 +15,13 @@ carrying the answer is not reliably the frame a readout lands on. Wiedemer et al
 (arXiv:2509.20328) report a pair for exactly that reason, and so does this probe
 wherever `best_frame` is configured:
 
-  <metric>        the readout frame. Predetermined and ground-truth-blind, so it
-                  is the number a model could actually be deployed against.
-  best_<metric>   the best any frame of the clip reaches, chosen *by* the ground
-                  truth. An oracle upper bound — what the clip contained at its
-                  best moment, not what a readout can reach. Never quote it
-                  without the label.
+  <metric>        the last frame (the readout). Predetermined and
+                  ground-truth-blind, so it is the number a model could
+                  actually be deployed against.
+  best_<metric>   the best frame: the best any frame of the clip reaches, chosen
+                  *by* the ground truth. An upper bound — what the clip
+                  contained at its best moment, not what a readout can reach.
+                  Never quote it without the label.
 
 The gap between the two is what the readout is losing, and it is the thing to
 look at before tuning one.
@@ -31,7 +32,7 @@ video does not end a 200-sample run.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -39,7 +40,9 @@ from wmcore import registry
 from wmcore.utils import read_image, resize_to
 from wmcore.video import iter_frames
 
+from . import gates as _gates  # noqa: F401  (registers the shipped gates)
 from .config import ProbeConfig
+from .gates import GateContext
 from .types import ProbeData, Result, RunContext, Sample
 
 
@@ -51,7 +54,10 @@ class Probe:
     extractor: Any
     metrics: list[Any]
     description: str = ""
-    best_frame: dict[str, Any] | None = None  # {rank_by, stride}; None skips the oracle pass
+    best_frame: dict[str, Any] | None = None  # {rank_by, stride}; None skips the best-frame pass
+    level: str = ""  # Scene | Interaction | Robot State, for the report only
+    headline: str = ""  # which score heads the summary table
+    gates: list[Any] = field(default_factory=list)
 
     @classmethod
     def from_config(cls, config: ProbeConfig) -> "Probe":
@@ -68,16 +74,21 @@ class Probe:
             metrics=[registry.build("metric", spec) for spec in config.metrics],
             description=config.description,
             best_frame=best_frame or None,
+            level=config.level,
+            headline=config.headline,
+            gates=[registry.build("gate", spec) for spec in config.gates],
         )
 
     def evaluate(self, sample: Sample, ctx: RunContext) -> Result:
         video = sample.video_for(self.name)
         if video is None:
-            return Result(sample.sample_id, self.name, "skipped", error="no video for this probe")
+            return Result(sample.sample_id, self.name, "skipped", error="no video for this probe", meta=sample.meta)
         if not video.exists():
-            return Result(sample.sample_id, self.name, "skipped", error=f"missing video: {video}")
+            return Result(sample.sample_id, self.name, "skipped", error=f"missing video: {video}", meta=sample.meta)
 
         info: dict[str, Any] = {"video": str(video)}
+        gate_results: list[dict[str, Any]] = []
+        valid, invalid_reason = True, None
         try:
             input_frame = read_image(sample.input_frame)
             truth = self.ground_truth(sample, input_frame, ctx)
@@ -89,14 +100,48 @@ class Probe:
             prediction, truth = _align(prediction, truth)
             scores = self._score(prediction, truth)
 
+            # Fidelity gates screen the rollout before its score is trusted. A
+            # failure flags the row, it does not change the number.
+            gate_results = self._run_gates(sample, input_frame, output_frame, prediction, video, info)
+            valid = all(g["valid"] for g in gate_results)
+            invalid_reason = next((g["reason"] for g in gate_results if not g["valid"]), None)
+
             if self.best_frame:
                 scores.update(self._best_over_frames(video, sample, ctx, truth, scores, info))
         except Exception as exc:  # noqa: BLE001 - one sample must not end the run
-            return Result(sample.sample_id, self.name, "error", info=info, error=f"{type(exc).__name__}: {exc}")
+            return Result(
+                sample.sample_id, self.name, "error", info=info,
+                error=f"{type(exc).__name__}: {exc}", meta=sample.meta,
+            )
 
         info["prediction"] = prediction.info
         info["ground_truth"] = truth.info
-        return Result(sample.sample_id, self.name, "ok", scores=scores, info=info)
+        info["gates"] = gate_results
+        return Result(
+            sample.sample_id, self.name, "ok",
+            scores=scores, info=info, valid=valid, invalid_reason=invalid_reason, meta=sample.meta,
+        )
+
+    def _run_gates(
+        self,
+        sample: Sample,
+        input_frame: Any,
+        output_frame: Any,
+        prediction: ProbeData,
+        video: Path,
+        info: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        if not self.gates:
+            return []
+        context = GateContext(
+            sample=sample,
+            input_frame=input_frame,
+            output_frame=output_frame,
+            prediction=prediction,
+            video=video,
+            readout=info,
+        )
+        return [gate(context) for gate in self.gates]
 
     def _score(self, prediction: ProbeData, truth: ProbeData) -> dict[str, float]:
         scores: dict[str, float] = {}
@@ -118,7 +163,7 @@ class Probe:
 
         Frames before `start_index` are not candidates. The opening frames of a
         generated clip are still the conditioning frame — nothing has been
-        painted yet — so an oracle free to pick them will sometimes return a
+        painted yet — so a best-frame search free to pick them will sometimes return a
         score won by scene content the model never touched, which is the one
         thing a maximum over frames must not reward.
 
@@ -130,7 +175,7 @@ class Probe:
         than papered over.
 
         A frame the extractor chokes on is counted and skipped rather than
-        raised — an oracle pass must not cost the sample its real score.
+        raised — a best-frame pass must not cost the sample its real score.
         """
         rank_by = self.best_frame["rank_by"]
         if rank_by not in readout_scores:
@@ -172,7 +217,7 @@ class Probe:
             "n_scored": n_scored,
             "n_failed": n_failed,
             "includes_readout_frame": seeded,
-            "oracle": "chosen by the ground truth: an upper bound, not a deployable score",
+            "note": "chosen by the ground truth: an upper bound, not a deployable score",
         }
         scored = {f"best_{key}": value for key, value in best.items()}
         scored["best_frame_index"] = float(best_index)

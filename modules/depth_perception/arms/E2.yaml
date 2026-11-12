@@ -1,0 +1,33 @@
+# E2: the base's grayscale rules. Built from P1.
+#
+# Slot E. Adds the base's paragraph "The image is completely grayscale. There is
+# no color anywhere, no red or green or blue tint, ... only smooth brightness that
+# encodes distance." after the brightness paragraph.
+#
+# Part of the bridging path from Wiedemer et al. (2025)'s depth prompt to this
+# probe's base prompt: paper -> V1 -> E1 -> P1 -> E2 -> C1 -> H1 -> base. Each step
+# builds on the one before and changes one slot (docs/depth_prompt_ablations.md).
+# Every step before `base` sets `negative: ""`, so the base's negatives are not
+# brought in early: adding them is the last step.
+description: P1 with the base's grayscale-rules paragraph
+prompt:
+  params:
+    text: |
+      This photograph becomes a single grayscale depth map of exactly the same
+      scene, from exactly the same camera position: same framing, same field of
+      view, same geometry. Every surface keeps its shape and outline. Nothing is
+      added or removed.
+
+      Depth is shown only as brightness and nothing else. Surfaces closest to the
+      camera are the brightest — near white. Surfaces further away are darker,
+      grading smoothly to black at the far end of the scene. A surface at one
+      distance is one flat shade everywhere it appears.
+
+      The image is completely grayscale. There is no color anywhere, no red or
+      green or blue tint, no colormap, no rainbow, no red-to-blue scale. There
+      are no edges, no outlines, no text, no labels, no numbers, no arrows, no
+      shading detail, no texture, no highlights, no reflections: only smooth
+      brightness that encodes distance.
+
+      Static scene, no pan, no zoom, no dolly.
+    negative: ""

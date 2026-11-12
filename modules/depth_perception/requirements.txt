@@ -1,0 +1,8 @@
+# Extra dependencies for this probe only; the pipeline itself needs none of them.
+#   pip install -r modules/depth_perception/requirements.txt
+torch>=2.4
+
+# Depth Anything 3 is the authors' package, not on PyPI at time of writing:
+#   git clone https://github.com/ByteDance-Seed/depth-anything-3
+#   cd depth-anything-3 && pip install -e .
+# Weights pull from the Hub (depth-anything/DA3-LARGE-1.1, DA3-BASE, ...).

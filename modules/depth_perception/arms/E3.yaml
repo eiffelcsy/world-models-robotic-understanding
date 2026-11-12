@@ -1,0 +1,35 @@
+# E3: stop naming colour maps in the prompt. Slot E.
+#
+# In segmentation, two of two "avoid X" sentences produced X (T1, E4). This
+# prompt names colour maps three times. Deletes one sentence.
+#
+# Word diff against base:
+#   The image is completely grayscale. [-There is no color anywhere, no red or
+#   green or blue tint, no colormap, no rainbow, no red-to-blue scale.-] There are
+#   no edges...
+#
+# Improvement arm, built from the base prompt (prompt.yaml), one slot changed.
+# A hypothesis to run after the base is diagnosed (docs/depth_prompt_ablations.md).
+description: base without the sentence naming colours and colour maps
+prompt:
+  params:
+    text: |
+      This photograph becomes a single grayscale depth map of exactly the same
+      scene, from exactly the same camera position: same framing, same field of
+      view, same geometry. Every surface keeps its shape and outline. Nothing is
+      added or removed.
+
+      Depth is shown only as brightness and nothing else. Surfaces closest to the
+      camera are the brightest — near white. Surfaces further away are darker,
+      grading smoothly to black at the far end of the scene. A surface at one
+      distance is one flat shade everywhere it appears.
+
+      The image is completely grayscale. There
+      are no edges, no outlines, no text, no labels, no numbers, no arrows, no
+      shading detail, no texture, no highlights, no reflections: only smooth
+      brightness that encodes distance.
+
+      The camera is locked off on a tripod and does not move, pan, zoom or
+      shake. The depth map is fully formed by {settle_s} seconds and then holds
+      completely still for the rest of the {duration_s} seconds. One continuous
+      shot, no cut.

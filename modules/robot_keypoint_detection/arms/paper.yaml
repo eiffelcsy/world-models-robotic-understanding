@@ -1,0 +1,23 @@
+# paper: Wiedemer et al. (2025) keypoint-localization prompt (Fig. 12), adapted.
+#
+# Theirs: "Add a bright blue dot at the tip of the branch on which the macaw is
+# sitting. The macaw's eye turns bright red. Everything else turns pitch black.
+# Static camera perspective, no zoom or pan."
+# Adapted with the fewest edits that make it the robot-joint task: their two named
+# targets, each with its own colour, become "a bright dot of a different color on
+# each joint of the robot arm". "Everything else turns pitch black" and the camera
+# sentence are verbatim.
+#
+# Bridging path, adapted Wiedemer et al. (2025) keypoint prompt -> our base:
+# paper -> R1 -> T1 -> E1 -> K1 -> base. Each arm is the previous one with one change.
+# The base was written by design; this path measures each change afterwards
+# (docs/keypoint_prompt_ablations.md).
+#
+# Slot changed: none (new baseline). No negatives. The black background fails the
+# scene-preservation gate by design; the gate is waived for this arm only.
+description: "paper: Wiedemer et al. (2025) keypoint prompt adapted to robot joints, black background"
+prompt:
+  params:
+    text: |
+      Add a bright dot of a different color on each joint of the robot arm. Everything else turns pitch black. Static camera perspective, no zoom or pan.
+    negative: ""

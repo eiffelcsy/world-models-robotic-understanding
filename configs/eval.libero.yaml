@@ -1,0 +1,29 @@
+# Evaluation run over the manifest configs/gen.libero.yaml produces. Its own
+# gt_dir/output_dir, same reasoning as eval.robotrustbench.yaml.
+root: ..
+
+manifest: configs/manifest.libero.yaml
+output_dir: results/libero
+
+gt_dir: results/libero
+
+modules_dir: modules
+modules:
+  include: ["*"]
+  exclude: []
+
+# Every probe here is scored against the simulator, not a model's estimate.
+# scripts/libero_replay/render_gt.py replays each sample in MuJoCo, renders its
+# conditioning frame, and records depth, segmentation, link positions, the camera
+# and the grasped object beside it (data/libero/sim/). See docs/libero_ground_truth.md.
+#
+# Keypoints, pose and grasp read the simulator by default. Segmentation and depth
+# default to SAM 3 and DA3 for RoboTrustBench, so they are switched here.
+ground_truth_overrides:
+  instance_seg:
+    type: sim_instances
+  depth_perception:
+    type: sim_depth
+
+limit: null
+fail_fast: false

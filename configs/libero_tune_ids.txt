@@ -1,0 +1,10 @@
+# LIBERO tune split (4 of 20 frames), fixed 2026-11-09 before any ablation clip.
+# Drawn with random.Random(0): one frame per suite in the order spatial, object,
+# goal, long (libero_10), each from that suite's sorted sample ids; the other
+# 16 frames are the held-out test set (configs/libero_test_ids.txt). Every prompt choice is made on the tune frames only;
+# the test frames are used once, to confirm the final prompts.
+# `frames_dir` with `include:` reads this file. One sample id per line.
+libero_spatial__ep1520_f030
+libero_object__ep1227_f027
+libero_goal__ep0546_f011
+libero_10__ep0231_f017

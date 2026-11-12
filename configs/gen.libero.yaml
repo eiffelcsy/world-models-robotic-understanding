@@ -1,0 +1,72 @@
+# Generation run over a 20-episode LIBERO subset (huggingface.co/datasets/lerobot/libero).
+#
+# Prerequisite: materialize the subset as a frames_dir + meta_file first —
+#   python scripts/fetch_libero.py --out data/libero
+#
+# Its own clips_dir/output_dir/manifest_out, same reasoning as
+# gen.robotrustbench.yaml. Frames are 1280x720 like RoboTrustBench, so the same
+# 16:9 prompts apply; see that script for why they are not left at 256x256.
+root: ..
+
+frames:
+  type: frames_dir
+  params:
+    path: ./data/libero/frames
+    pattern: "*.png"
+    # {task, category (suite), subcategory (scene), eef_pos, eef_axis_angle,
+    # grasp_object, grasp_pos, world_to_image, intrinsics, ...}, written by
+    # fetch_libero.py.
+    meta_file: ./data/libero/meta.yaml
+    # Prompt ablations run on the 4 tune frames (one per suite); the 16 test frames
+    # are used once, to confirm the final prompts. Switch the file to change set:
+    #   ./configs/libero_tune_ids.txt   tuning (default)
+    #   ./configs/libero_test_ids.txt   held-out confirmation
+    # Remove the line to generate all 20.
+    include: ./configs/libero_tune_ids.txt
+
+# fetch_libero.py already writes `relevant_objects` and `gt_prompt` into the meta,
+# parsed from the instructions, so the semantics stage has nothing to ask an LLM.
+# `cached` needs no endpoint, and leaves a frame that has both as it is.
+semantics:
+  type: cached
+  params:
+    overrides: configs/semantics_overrides.json
+
+semantics_dir: semantics/libero
+
+# omni12 (Gemini Omni 1.2 Flash, Gemini API) costs money per clip; verify
+# backends/omni12/backend.yaml with `--limit 1` before a full pass. Veo 3.1
+# (backends/veo31_vertex) was the previous choice; its clips are not comparable.
+backend: omni12
+
+# Prompt arm and repeat (wmcore/arms.py); --arm / --repeat override these.
+# The backend seed is seed_base + repeat, the same for every arm.
+arm: base
+repeat: 0
+seed_base: 0
+
+clips_dir: clips/libero
+output_dir: results/gen_libero
+manifest_out: configs/manifest.libero.yaml
+
+modules_dir: modules
+backends_dir: backends
+modules:
+  include: ["*"]
+  exclude: []
+
+video:
+  duration_s: 6
+
+# Set to a small number (or use --limit on the CLI) before a paid run.
+limit: null
+
+limit_by: null
+limit_seed: 0
+
+# Always dry-run first: renders every prompt against the real instructions and
+# writes the manifest that would result, without calling veo3 or spending money.
+dry_run: false
+
+refresh: false
+fail_fast: false

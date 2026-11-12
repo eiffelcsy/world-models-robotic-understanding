@@ -1,0 +1,67 @@
+name: depth_perception
+description: >
+  The conditioning frame is replaced by a grayscale depth map, near bright and
+  far dark. Ground truth is Depth Anything 3 run on the input frame
+  (RoboTrustBench), or the simulator's metric depth on LIBERO
+  (configs/eval.libero.yaml); the model never sees it.
+
+enabled: true
+
+level: Scene
+headline: delta1
+
+# Depth re-renders the whole frame, so scene preservation has no "outside the
+# region" and instruction compliance is covered by the metric itself; only
+# temporal stability screens the readout.
+gates:
+  - {type: temporal_stability, params: {window_s: 1.0, stride: 2, max_diff: 12.0}}
+
+# Every probe reports the same pair: the last frame (this readout, blind to the
+# ground truth) and the best frame (below).
+readout:
+  type: last_frame
+  params:
+    back_off: 1
+
+# The best frame. `delta1` is higher-is-better, unlike every error metric
+# here, so it is the one legal ranking score.
+best_frame:
+  enabled: true
+  rank_by: delta1
+  stride: 1
+  start_index: 5
+
+ground_truth:
+  type: depth_anything3
+  params:
+    model_id: depth-anything/DA3-LARGE-1.1   # DA3-BASE / DA3-SMALL also on the Hub
+    device: null                            # null -> cuda when torch sees one, else cpu
+    min_instances: 1
+
+extractor:
+  type: gray_depth
+  params:
+    near_is_bright: true
+    clip_percentile: 2.0
+    smooth: 5
+    invert: false
+
+metrics:
+  - type: depth_metrics
+    params:
+      align: scale_shift   # both fields are relative; fit scale and offset first
+      min_depth: 0.001
+      max_depth: 1000.0
+      delta: 1.25
+  # The same errors with the fit done in inverse depth, the relative-depth
+  # standard (metrics.py, `space`). Reported beside the depth-space scores as
+  # disp_delta1, disp_abs_rel, ...; decided 2026-11-09, before any depth clip
+  # from the ablations was scored. The best frame is still chosen by `delta1`.
+  - type: depth_metrics
+    params:
+      align: scale_shift
+      space: disparity
+      prefix: disp_
+      min_depth: 0.001
+      max_depth: 1000.0
+      delta: 1.25

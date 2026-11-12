@@ -1,7 +1,9 @@
 name: instance_seg
 description: >
-  The objects relevant to this frame's task, masked one at a time
-  — one flat, fully saturated color each — then held still. Everything else
+  The objects relevant to this frame's task, masked one at a time in "an
+  opaque colored mask", then held still. This base prompt does not ask for full
+  saturation or a different color per object, though the decoder needs both:
+  arms/E1.yaml tests asking for them. Everything else
   (the robot arm included) stays the untouched photograph. This is the asking
   half of the convention extractor.py decodes — change one and change the
   other, or the probe scores a model failure that is really a wiring failure.
@@ -11,6 +13,7 @@ enabled: true
 prompt:
   type: template
   params:
+    # Slots (docs/prompt_framework.md): P, C | T+E, T | R | H
     text: |
       This photograph stays exactly as it is: same framing, same lighting, same
       shadows, same photographic texture and grain. Nothing in it is redrawn,

@@ -1,0 +1,13 @@
+# Prompt-ablation eval config for grasp_region_seg: the 4 LIBERO tune frames, seed 0, this probe only.
+# Run every arm with scripts/run_ablations.sh grasp_region_seg <arm> ... (docs/prompt_framework.md).
+root: ../..
+manifest: results/ablations/grasp_region_seg/manifest.yaml
+output_dir: results/ablations/grasp_region_seg/eval
+gt_dir: results/libero
+modules_dir: modules
+modules:
+  include:
+  - grasp_region_seg
+  exclude: []
+limit: null
+fail_fast: false

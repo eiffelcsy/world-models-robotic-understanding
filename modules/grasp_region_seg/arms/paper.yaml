@@ -1,0 +1,37 @@
+# paper: Wiedemer et al. (2025) Veo segmentation prompt (App. B.2), adapted to grasp.
+#
+# No published prompt asks a video model to mark a grasp region. The paper's only
+# related prompt (Fig. 45, affordance recognition: "The robot hands mounted on robot
+# arms pick up the hammer...") asks for the action, which no mask decoder can read.
+# So the baseline is their segmentation prompt with the fewest edits that make it
+# a grasp task. Against the instance_seg `paper` arm:
+#   - "instance segmentation" -> "grasp region segmentation";
+#   - "each distinct entity is overlaid in a different flat color" -> "the part of
+#     {grasp_object} that a robot would grasp is overlaid in a flat color";
+#   - the four one-entity-at-a-time bullets -> one bullet for the single target,
+#     keeping "covered by a flat color, perfectly preserving its silhouette".
+# Everything else is verbatim, including the green background and the Camera list.
+#
+# Bridging path, adapted Wiedemer et al. (2025) segmentation prompt -> our base:
+# paper -> R1 -> T1 -> E1 -> K1 -> base. Each arm is the previous one with one change.
+# The base was written from the segmentation prompt by design; this path measures
+# each change afterwards (docs/grasp_prompt_ablations.md).
+#
+# Slot changed: none (new baseline). No negatives.
+description: "paper: Wiedemer et al. (2025) segmentation prompt adapted to one grasp region, green background"
+prompt:
+  params:
+    text: |
+      Create an animation of grasp region segmentation being performed on this photograph: the part of {grasp_object} that a robot would grasp is overlaid in a flat color.
+      Scene:
+      • The animation starts from the provided, unaltered photograph.
+      • The scene in the photograph is static and doesn't move.
+      • First, the background fades to green.
+      • Then, the part of {grasp_object} that a robot would grasp is covered by a flat color, perfectly preserving its silhouette.
+      Camera:
+      • Static shot without camera movement.
+      • No pan.
+      • No rotation.
+      • No zoom.
+      • No glitches or artifacts.
+    negative: ""

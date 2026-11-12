@@ -1,4 +1,4 @@
-"""SAM 3 image inference, isolated.
+"""SAM 3 image inference by concept, isolated.
 
 Everything that depends on the exact shape of the SAM 3 API lives in `_load` and
 `Sam3ImageSegmenter.segment`, so a change in `transformers` is a two-function
@@ -104,7 +104,9 @@ def _load(model_id: str, device: str | None, dtype: str) -> tuple[Any, Any, str]
 
     key = (model_id, device or "auto", dtype)
     if key not in _LOADED:
-        resolved = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        resolved = device or (
+            "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+        )
         processor = Sam3Processor.from_pretrained(model_id)
         model = Sam3Model.from_pretrained(model_id)
         model.to(device=resolved, dtype=getattr(torch, dtype))

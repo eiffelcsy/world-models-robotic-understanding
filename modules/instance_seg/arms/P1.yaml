@@ -1,0 +1,42 @@
+# P1: 'The animation starts from the provided, unaltered photograph.' -> our preservation paragraph.
+#
+# Bridging path, Wiedemer et al. (2025) -> our base prompt: paper -> F1 -> T2 -> R1 -> E6 -> H2
+# -> P1 -> C1 -> N1 (= base). Each arm is the previous one with one change. The base was
+# adapted from the paper's prompt by design; this path measures each change afterwards
+# (docs/segmentation_prompt_ablations.md).
+#
+# Slot changed: P.
+#
+# Word diff against H2:
+#   {+This photograph stays exactly as it is:+}
+#   {+same framing, same lighting, same shadows, same photographic texture and grain.+}
+#   {+Nothing in it is redrawn, restyled, simplified, flattened or re-lit.+}
+#   The [-animation starts from-]{+scene geometry also stays+} the [-provided, unaltered photograph.-]{+same — no objects are added, removed or changed in any way.+}
+description: "P1: 'The animation starts from the provided, unaltered photograph.' -> our preservation paragraph"
+prompt:
+  params:
+    text: |
+      This photograph stays exactly as it is: same framing, same lighting, same
+      shadows, same photographic texture and grain. Nothing in it is redrawn,
+      restyled, simplified, flattened or re-lit. The scene geometry also stays the
+      same — no objects are added, removed or changed in any way.
+
+      The scene in the photograph is static and doesn't move.
+
+      One at a time, in immediate succession, an opaque colored mask appears on top
+      of each of these objects — {relevant_objects} — lying directly over that
+      object and covering it exactly. Each mask spreads outward from inside the
+      object until its edge sits precisely on that object's outline, then stops,
+      including at thin parts, handles and holes. Once a mask has appeared, it stays
+      unchanged for the rest of the clip.
+
+      Everything not covered by a mask remains the untouched original photograph:
+      every other object in the scene, the robot arm, the table surface, the floor,
+      the walls, the background, and the shadows objects cast onto that surface.
+
+      All masks are in place by {settle_s} seconds into the clip, after which the
+      frame is completely still for the remainder of the {duration_s} seconds.
+
+      Static shot without camera movement. No pan. No rotation. No zoom. No glitches
+      or artifacts.
+    negative: ""

@@ -1,0 +1,57 @@
+name: grasp_region_seg
+description: >
+  The part of the object to pick up that affords a grasp, masked in one flat, fully
+  saturated color and then held still. Everything else stays the untouched
+  photograph. This is the asking half of the convention extractor.py decodes.
+
+enabled: true
+
+prompt:
+  type: template
+  params:
+    # Slots (docs/prompt_framework.md): P, C | T+E | R | H
+    text: |
+      This photograph stays exactly as it is: same framing, same lighting, same
+      shadows, same photographic texture and grain. Nothing in it is redrawn,
+      restyled, simplified, flattened or re-lit. The scene geometry also stays
+      the same — no objects are added, removed or changed in any way.
+
+      The camera is locked off on a tripod and does not move, pan, zoom or
+      shake. Nothing in the scene moves.
+
+      An opaque colored mask appears on top of the graspable part of
+      {grasp_object} — the region of the object that a robot gripper would
+      close around to pick it up. The mask covers only that graspable region,
+      not the whole object, and sits precisely on its outline. It is one flat,
+      fully saturated color, with no shading, gradient or texture. Once it has
+      appeared it stays unchanged for the rest of the clip.
+
+      Everything not covered by the mask remains the untouched original
+      photograph: the rest of the object, every other object in the scene, the
+      robot arm, the table surface, the floor and the background.
+
+      The mask is in place by {settle_s} seconds into the clip, after which the
+      frame is completely still for the remainder of the {duration_s} seconds.
+      Static locked-off camera, one continuous shot, no cut, no zoom, no pan,
+      no dolly, no camera shake, no text, no labels, no outlines, no watermark.
+
+    negative: >
+      camera motion, panning, zooming, handheld shake, moving objects, shading,
+      gradients, textures, highlights, outlines, edges, text, labels, captions,
+      pale colors, pastel colors, white overlay, black overlay, grey overlay,
+      transparency
+
+    requires: [grasp_object]
+
+video:
+  duration_s: 6
+  aspect_ratio: "16:9"
+  resolution: 720p
+
+checks:
+  - type: playable
+    params:
+      min_frames: 24
+  - type: changed
+    params:
+      min_change: 0.0

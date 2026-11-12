@@ -1,0 +1,28 @@
+# paper: Wiedemer et al. (2025) Veo segmentation prompt, verbatim, green background (App. B.2).
+#
+# Bridging path, Wiedemer et al. (2025) -> our base prompt: paper -> F1 -> T2 -> R1 -> E6 -> H2
+# -> P1 -> C1 -> N1 (= base). Each arm is the previous one with one change. The base was
+# adapted from the paper's prompt by design; this path measures each change afterwards
+# (docs/segmentation_prompt_ablations.md).
+#
+# Slot changed: none (new baseline).
+description: "paper: Wiedemer et al. (2025) Veo segmentation prompt, verbatim, green background (App. B.2)"
+prompt:
+  params:
+    text: |
+      Create an animation of instance segmentation being performed on this photograph: each distinct entity is overlaid in a different flat color.
+      Scene:
+      • The animation starts from the provided, unaltered photograph.
+      • The scene in the photograph is static and doesn't move.
+      • First, the background fades to green.
+      • Then, the first entity is covered by a flat color, perfectly preserving its silhouette.
+      • Then the second entity, too, is covered by a different flat color, perfectly preserving its silhouette.
+      • One by one, each entity is covered by a different flat color.
+      • Finally, all entities are covered with different colors.
+      Camera:
+      • Static shot without camera movement.
+      • No pan.
+      • No rotation.
+      • No zoom.
+      • No glitches or artifacts.
+    negative: ""

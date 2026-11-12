@@ -1,0 +1,46 @@
+# C1: the paper's static-scene and camera sentences -> our camera paragraph and shot sentence; text now identical to prompt.yaml.
+#
+# Bridging path, Wiedemer et al. (2025) -> our base prompt: paper -> F1 -> T2 -> R1 -> E6 -> H2
+# -> P1 -> C1 -> N1 (= base). Each arm is the previous one with one change. The base was
+# adapted from the paper's prompt by design; this path measures each change afterwards
+# (docs/segmentation_prompt_ablations.md).
+#
+# Slot changed: C.
+#
+# Word diff against P1:
+#   The [-scene in the photograph-]{+camera+} is [-static-]{+locked off on a tripod+} and [-doesn't move.-]{+does not move, pan, zoom or shake.+}
+#   {+Nothing in the scene moves.+}
+#   Static [-shot without-]{+locked-off camera, one continuous shot, no cut, no zoom, no pan, no dolly, no+} camera [-movement.-]
+#   [-No pan.-]
+#   [-No rotation.-]
+#   [-No zoom.-]
+#   [-No glitches or artifacts.-]{+shake, no text, no labels, no outlines, no watermark.+}
+description: "C1: the paper's static-scene and camera sentences -> our camera paragraph and shot sentence; text now identical to prompt.yaml"
+prompt:
+  params:
+    text: |
+      This photograph stays exactly as it is: same framing, same lighting, same
+      shadows, same photographic texture and grain. Nothing in it is redrawn,
+      restyled, simplified, flattened or re-lit. The scene geometry also stays
+      the same — no objects are added, removed or changed in any way.
+
+      The camera is locked off on a tripod and does not move, pan, zoom or
+      shake. Nothing in the scene moves.
+
+      One at a time, in immediate succession, an opaque colored mask appears on
+      top of each of these objects — {relevant_objects} — lying directly over
+      that object and covering it exactly. Each mask spreads outward from
+      inside the object until its edge sits precisely on that object's outline,
+      then stops, including at thin parts, handles and holes. Once a mask has
+      appeared, it stays unchanged for the rest of the clip.
+
+      Everything not covered by a mask remains the untouched original
+      photograph: every other object in the scene, the robot arm, the table
+      surface, the floor, the walls, the background, and the shadows objects
+      cast onto that surface.
+
+      All masks are in place by {settle_s} seconds into the clip, after which the
+      frame is completely still for the remainder of the {duration_s} seconds.
+      Static locked-off camera, one continuous shot, no cut, no zoom, no pan,
+      no dolly, no camera shake, no text, no labels, no outlines, no watermark.
+    negative: ""

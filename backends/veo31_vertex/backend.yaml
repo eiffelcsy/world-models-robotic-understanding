@@ -1,0 +1,74 @@
+# Veo 3.1 Fast (GA) through Google Cloud Vertex AI, as a generic HTTP job.
+#
+# Why this and not backends/veo3: the Gemini API's Veo 3.1 *preview* models
+# (veo-3.1-fast-generate-preview and the rest) were shut down on 2026-10-22. The
+# GA models live on Vertex AI / Gemini Enterprise Agent Platform, region
+# us-central1 only. Sources, checked 2026-11-09:
+#   https://aistudio.google.com/docs/video                              (the shutdown)
+#   https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/veo/3-1-generate
+#   https://docs.cloud.google.com/vertex-ai/generative-ai/docs/video/generate-videos-from-an-image
+#
+# Seed: Vertex documents `seed` as "an uint32 value that the model uses to
+# generate deterministic videos ... without changing other parameters guides the
+# model to produce the same videos", range 0-4294967295. wmgen sends
+# seed_base + repeat (configs/gen.*.yaml), the same for every prompt arm.
+#
+# Before a run, in the shell (never in this file):
+#   export GOOGLE_CLOUD_PROJECT=<your project id>
+#   export GOOGLE_CLOUD_ACCESS_TOKEN=$(gcloud auth print-access-token)
+# The token lasts about an hour; refresh it before a long run.
+#
+# VERIFY WITH ONE CLIP (`--limit 1`) BEFORE A PAID RUN. The request follows the
+# image-to-video REST page above. Two fields were not on that page and are this
+# file's best reading of the API: `durationSeconds` (the page names a 4/6/8 s
+# duration) and `generateAudio` (Veo 3 models generate sound unless told not to;
+# a probe never needs it). The response path assumes no `storageUri`, in which
+# case the video comes back inline as base64.
+
+name: veo31_vertex
+type: http_job
+
+params:
+  model_id: veo-3.1-fast-generate-001
+
+  headers:
+    Authorization: "Bearer ${GOOGLE_CLOUD_ACCESS_TOKEN}"
+
+  submit:
+    url: https://us-central1-aiplatform.googleapis.com/v1/projects/${GOOGLE_CLOUD_PROJECT}/locations/us-central1/publishers/google/models/veo-3.1-fast-generate-001:predictLongRunning
+    method: POST
+    body:
+      instances:
+        - prompt: "{prompt}"
+          image:
+            bytesBase64Encoded: "{image_b64}"
+            mimeType: "{image_mime}"
+      parameters:
+        aspectRatio: "{aspect_ratio}"
+        resolution: "{resolution}"
+        negativePrompt: "{negative}"
+        durationSeconds: "{duration_s}"
+        seed: "{seed}"            # dropped from the request when no seed is set
+        sampleCount: 1
+        generateAudio: false
+    job_id_path: name
+
+  poll:
+    url: https://us-central1-aiplatform.googleapis.com/v1/projects/${GOOGLE_CLOUD_PROJECT}/locations/us-central1/publishers/google/models/veo-3.1-fast-generate-001:fetchPredictOperation
+    method: POST
+    body:
+      operationName: "{job_id}"
+    interval_s: 10
+    timeout_s: 900
+    done_path: done
+    error_path: error
+
+  fetch:
+    b64_path: response.videos[0].bytesBase64Encoded
+
+  retries: 3
+
+defaults:
+  duration_s: 6
+  aspect_ratio: "16:9"
+  resolution: 720p

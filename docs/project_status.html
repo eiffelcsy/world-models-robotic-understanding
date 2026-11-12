@@ -1,0 +1,398 @@
+<title>Perception-by-Generation Status</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a single reading column of lab-notebook sections; per-probe spec sheets with metric tables; summary first, detail after. */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #1b2230;
+  --muted: #5a6476;
+  --line: #d9dee7;
+  --accent: #2f4fb8;
+  --accent-soft: #e6ebfa;
+  --ok: #1f7a4d;   --ok-bg: #e2f3ea;
+  --warn: #9a6100; --warn-bg: #fbf0d9;
+  --bad: #b3261e;  --bad-bg: #fbe4e2;
+  --todo: #5a6476; --todo-bg: #eceff4;
+  --code-bg: #eef1f6;
+  --display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161e; --surface: #1a202b; --fg: #e3e7ee; --muted: #9aa4b5; --line: #2d3545;
+    --accent: #8ea6ff; --accent-soft: #232c45;
+    --ok: #6fd39f; --ok-bg: #173126; --warn: #f0c060; --warn-bg: #352a12;
+    --bad: #ff8a80; --bad-bg: #3a1c1a; --todo: #a9b2c2; --todo-bg: #262d3a; --code-bg: #222938;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161e; --surface: #1a202b; --fg: #e3e7ee; --muted: #9aa4b5; --line: #2d3545;
+  --accent: #8ea6ff; --accent-soft: #232c45;
+  --ok: #6fd39f; --ok-bg: #173126; --warn: #f0c060; --warn-bg: #352a12;
+  --bad: #ff8a80; --bad-bg: #3a1c1a; --todo: #a9b2c2; --todo-bg: #262d3a; --code-bg: #222938;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--body);
+  font-size: 15.5px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px 80px;
+}
+.wrap { max-width: 920px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+section { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+h1, h2, h3, h4 { font-family: var(--display); font-weight: 600; text-wrap: balance; margin: 0; line-height: 1.2; }
+h1 { font-size: 2.3rem; letter-spacing: -0.01em; }
+h2 { font-size: 1.6rem; padding-bottom: 8px; border-bottom: 2px solid var(--fg); }
+h3 { font-size: 1.25rem; }
+h4 { font-size: 1rem; font-family: var(--body); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+p, ul, ol { margin: 0; max-width: 70ch; }
+ul, ol { padding-left: 1.25em; display: flex; flex-direction: column; gap: 6px; }
+a { color: var(--accent); }
+code, .mono { font-family: var(--mono); font-size: 0.86em; }
+code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+.eyebrow { font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 1.08rem; color: var(--muted); max-width: 68ch; }
+header { display: flex; flex-direction: column; gap: 12px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 20px; font-family: var(--mono); font-size: 0.8rem; color: var(--muted); }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); background: var(--code-bg); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 0.84rem; white-space: nowrap; }
+.chip { display: inline-block; font-family: var(--mono); font-size: 0.72rem; font-weight: 500; padding: 2px 8px; border-radius: 999px; white-space: nowrap; letter-spacing: 0.02em; }
+.c-ok { color: var(--ok); background: var(--ok-bg); }
+.c-warn { color: var(--warn); background: var(--warn-bg); }
+.c-bad { color: var(--bad); background: var(--bad-bg); }
+.c-todo { color: var(--todo); background: var(--todo-bg); }
+.findings { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.finding { background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--bad); border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.finding.warn { border-top-color: var(--warn); }
+.finding .big { font-family: var(--mono); font-size: 1.35rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.finding p { font-size: 0.92rem; }
+.probe { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.probe-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+.probe-head .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.spec { display: grid; grid-template-columns: 9.5em 1fr; gap: 8px 16px; font-size: 0.92rem; }
+.spec dt { color: var(--muted); font-weight: 500; }
+.spec dd { margin: 0; min-width: 0; }
+.formula { font-family: var(--mono); font-size: 0.86rem; background: var(--code-bg); padding: 10px 14px; border-radius: 4px; overflow-x: auto; white-space: pre; line-height: 1.55; }
+.callout { border-left: 3px solid var(--warn); background: var(--warn-bg); padding: 12px 16px; border-radius: 0 4px 4px 0; font-size: 0.92rem; display: flex; flex-direction: column; gap: 6px; }
+.callout.bad { border-left-color: var(--bad); background: var(--bad-bg); }
+.callout strong { font-weight: 600; }
+.pipeline { font-family: var(--mono); font-size: 0.82rem; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; overflow-x: auto; white-space: pre; line-height: 1.6; }
+.steps { counter-reset: s; list-style: none; padding: 0; gap: 12px; }
+.steps > li { counter-increment: s; display: grid; grid-template-columns: 2.2em 1fr; gap: 4px 10px; }
+.steps > li::before { content: counter(s); font-family: var(--mono); font-weight: 500; color: var(--accent); background: var(--accent-soft); border-radius: 4px; text-align: center; height: 1.7em; line-height: 1.7em; font-size: 0.85rem; }
+.steps > li > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.steps .why { color: var(--muted); font-size: 0.9rem; }
+.phase-label { font-family: var(--mono); font-size: 0.78rem; color: var(--accent); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 8px; }
+.brief { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px 28px; }
+.brief > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.brief p { font-size: 0.92rem; }
+.note { font-size: 0.85rem; color: var(--muted); }
+@media (max-width: 560px) {
+  h1 { font-size: 1.8rem; }
+  .spec { grid-template-columns: 1fr; gap: 2px; }
+  .spec dd { margin-bottom: 8px; }
+  .probe { padding: 16px; }
+}
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">IS470 · Codebase review · 3 Nov 2026</span>
+  <h1>Perception-by-Generation: where the project stands</h1>
+  <p class="lede">What the code in <code>world-models-robotic-understanding</code> does today, exactly how each probe is measured, what the pilot numbers do and do not show, and the work that should come next. The probe methodology is covered in full; everything else is summarised.</p>
+  <div class="meta">
+    <span>Branch: main @ 4fbefdc + uncommitted work</span>
+    <span>Pilot: Veo 3.1 Fast · 20 RoboTrustBench items · 120 clips</span>
+    <span>Results read from results/robotrustbench/</span>
+  </div>
+</header>
+
+<!-- ============ AT A GLANCE ============ -->
+<section>
+  <h2>At a glance</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Area</th><th>Status</th><th>Summary</th></tr></thead>
+    <tbody>
+      <tr><td>Generation pipeline (<code>wmgen</code>)</td><td><span class="chip c-ok">done</span></td><td>Frames → semantics → prompt → backend → checks → manifest, with a clip cache. Backends: <code>veo3</code> and <code>local</code>.</td></tr>
+      <tr><td>Evaluation pipeline (<code>wmeval</code>)</td><td><span class="chip c-ok">done</span></td><td>GT → readout → extractor → metrics, plus an oracle best frame, fidelity gates, and per-task, per-level and per-scenario reports.</td></tr>
+      <tr><td>Instance segmentation</td><td><span class="chip c-ok">scored</span></td><td>SAM 3 GT, mean IoU 0.114 (readout), 0.193 (oracle).</td></tr>
+      <tr><td>Depth perception</td><td><span class="chip c-warn">scored, not valid yet</span></td><td>δ¹ 0.359 is the same as the do-nothing baseline (0.357).</td></tr>
+      <tr><td>Active object detection</td><td><span class="chip c-warn">scored, overlaps T1</span></td><td>GT is identical to instance_seg on 14 of 17 items.</td></tr>
+      <tr><td>Robot keypoints</td><td><span class="chip c-warn">scored, inflated</span></td><td>27.5 predicted dots per frame against 7 joints. The baseline already reaches PCK 0.214.</td></tr>
+      <tr><td>Robot pose</td><td><span class="chip c-warn">scored, GT suspect</span></td><td>10 of 20 GT poses have a point outside the image.</td></tr>
+      <tr><td>Grasp region segmentation</td><td><span class="chip c-bad">blocked</span></td><td>Code exists. No AnyGrasp licence or checkpoint, and the probe is excluded from eval.</td></tr>
+      <tr><td>Contact detection</td><td><span class="chip c-todo">not started</span></td><td>No module and no GT source.</td></tr>
+      <tr><td>Multi-model evaluation</td><td><span class="chip c-todo">not started</span></td><td>No backends for Wan2.2 or HunyuanVideo yet (would use the <code>command</code> type).</td></tr>
+      <tr><td>Version control</td><td><span class="chip c-bad">at risk</span></td><td>Five probe modules and <code>wmeval/gates.py</code> are untracked, and 55 files are modified but not committed.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============ KEY FINDINGS ============ -->
+<section>
+  <h2>Four things found in this review</h2>
+  <p>I checked each of these against the cached pilot outputs. None needs new clips: everything below can be re-scored from the clips and GT already on disk.</p>
+  <div class="findings">
+    <div class="finding">
+      <span class="eyebrow">Depth</span>
+      <span class="big">0.357 vs 0.359</span>
+      <p>Feed the <em>untouched input photo</em> through <code>gray_depth</code> and score it, and it gets δ¹ 0.357. Veo gets 0.359. The current depth number cannot tell a model that drew a depth map from one that did nothing.</p>
+    </div>
+    <div class="finding">
+      <span class="eyebrow">Robot keypoints</span>
+      <span class="big">27.5 dots / 7 joints</span>
+      <p>The extractor finds about 24 saturated blobs in the raw input frame alone, so the null PCK is 0.214. PCK equals recall under nearest-first matching, so extra blobs inflate it, and precision is only 0.065. The readout-to-oracle gap (0.26 → 0.48), which the midterm reads as drift, is probably mostly this effect.</p>
+    </div>
+    <div class="finding">
+      <span class="eyebrow">RoboPEPP ground truth</span>
+      <span class="big">17 / 140 off-frame</span>
+      <p>12% of GT keypoints (in 11 of 20 items) and 10 of 20 pose targets fall outside the 1280×720 image. GT ran with no robot bbox and with guessed intrinsics (f = 1.2·max(H,W)). A model cannot draw a dot outside the frame.</p>
+    </div>
+    <div class="finding warn">
+      <span class="eyebrow">Active object vs instance seg</span>
+      <span class="big">14 / 17 identical GT</span>
+      <p>Both probes paint <code>{relevant_objects}</code> (target + destination) and are scored against the same <code>gt_prompt</code>. As configured, the "Interaction" task mostly repeats the "Scene" task.</p>
+    </div>
+  </div>
+  <p class="note">Null baseline: the conditioning frame scored as though it were the generated output, using each probe's own extractor, metric and cached GT. Computed with a throwaway script run in the repo venv. It is not part of the repo yet: step 1 below adds this baseline to the report properly.</p>
+</section>
+
+<!-- ============ SHARED PROTOCOL ============ -->
+<section>
+  <h2>Evaluation protocol shared by every probe</h2>
+  <div class="pipeline">conditioning frame ──GT source (specialist model)──▶ pseudo-GT ──┐   cached: &lt;gt_dir&gt;/&lt;probe&gt;_gt/&lt;id&gt;_gt.npz
+                                                                  ├──▶ metric ──▶ scores (+ best_* oracle scores)
+generated clip ──readout──▶ one frame ──extractor──▶ prediction ──┘
+                    └──▶ fidelity gates (flag only, never change the score)</div>
+
+  <dl class="spec">
+    <dt>Ground truth</dt><dd>Computed from the conditioning frame only, so the generated video can never leak into it. Stored as <code>.npz</code> plus a preview <code>.png</code>, and reused on later runs. Changing a param does not invalidate stored GT; the run only logs a warning. To regenerate, delete the file or run the module's <code>preview.py</code>.</dd>
+    <dt>Readout</dt><dd>Picks one frame without looking at the GT. <code>last_frame</code> (back_off=1) for five probes. Depth uses <code>most_static</code>: the frame with the smallest diff from the frame 2 steps before it, within the last 2.0 s. <code>fixed_time</code> also exists but is unused.</dd>
+    <dt>Oracle frame</dt><dd>The extractor and metric run on every frame (stride 1) from index 5 onward, keeping the frame with the highest <code>rank_by</code> score. Reported as <code>best_*</code>. It is an upper bound chosen using the GT, so it is not a deployable score. Frames 0–4 are skipped because they still show the conditioning image.</dd>
+    <dt>Resolution</dt><dd>The prediction is resized onto the GT pixel grid (nearest-neighbour for masks) before scoring.</dd>
+    <dt>Type contract</dt><dd><code>ProbeData.kind</code> ∈ {depth, binary_mask, instances, points}. Each metric declares the kinds it <code>accepts</code>, and a mismatch raises an error rather than producing a number.</dd>
+    <dt>Failures</dt><dd>When GT fails (e.g. SAM 3 finds nothing), the row gets <code>status=error</code> and is left out of n. Under <code>fail_fast: false</code> the run carries on past failures.</dd>
+  </dl>
+
+  <h3>Fidelity gates (<code>wmeval/gates.py</code>)</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Gate</th><th>Measurement</th><th>Fails when</th><th>Used by</th></tr></thead>
+    <tbody>
+      <tr><td><code>scene_preservation</code></td><td>Mean |output − input| / 255 over pixels outside the predicted region (dilated by <code>dilate</code> px; points are drawn as disks of that radius)</td><td class="mono">&gt; 0.15</td><td>all except depth (dilate 5 for masks, 25 for dots)</td></tr>
+      <tr><td><code>instruction_compliance</code></td><td>Area fraction of the marked region, or the number of decoded points</td><td class="mono">area ∉ [0.0005, 0.9]; points &lt; 1 (kp) or &lt; 2 (pose)</td><td>all except depth</td></tr>
+      <tr><td><code>temporal_stability</code></td><td>Mean absolute frame diff (0–255) over the last 1.0 s, stride 2</td><td class="mono">&gt; 10 (depth: 12)</td><td>all</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>Invalid rate</strong> = gate-failed rows ÷ scored rows. The report prints it next to every score. <strong>Invalid rows are still included in the headline means</strong>: <code>_metric_stats</code> filters on <code>status == "ok"</code> only. Aggregates are the mean and population std. There are no confidence intervals.</p>
+
+  <h3>Generation-side conventions shared by every prompt</h3>
+  <p>6 s, 16:9, 720p. Camera locked off. The overlay must be in place by <code>{settle_s}</code> and then held still. The instruction text is deliberately kept out of the prompt: only the parsed <code>{relevant_objects}</code> reaches the model, so counterfactual and adversarial instructions cannot be acted out. Generation-time checks (<code>playable</code>, min 24 frames; <code>changed</code>, reported but not enforced) decide whether a clip enters the manifest. They are not scores.</p>
+</section>
+
+<!-- ============ PER PROBE ============ -->
+<section>
+  <h2>Per-probe measurement</h2>
+
+  <!-- T1 -->
+  <div class="probe">
+    <div class="probe-head">
+      <h3>Instance segmentation · <code>instance_seg</code></h3>
+      <div class="tags"><span class="chip c-todo">Scene</span><span class="chip c-ok">scored</span></div>
+    </div>
+    <dl class="spec">
+      <dt>Ask</dt><dd>Mask each object in <code>{relevant_objects}</code>, one at a time, in its own opaque, fully saturated colour. Everything else, including the robot arm, stays photographic. Negatives: outlines, gradients, pastels, white/black/grey overlays.</dd>
+      <dt>Ground truth</dt><dd>SAM 3 (<code>facebook/sam3</code>) text-prompted with <code>gt_prompt</code> from semantics (fallback: "object on table", "robot arm"). Thresholds: score ≥ 0.5, mask logit 0.5, area ∈ [0.001, 0.2] of the frame, dedup IoU 0.8, ≤ 20 instances, ≥ 1 required.</dd>
+      <dt>Extractor</dt><dd><code>color_instances</code>: keep pixels with S ≥ 0.80. Find peaks in the hue histogram (the colours the model actually used), assign each pixel to its nearest peak, then split each colour into connected components. Components must cover 0.001–0.1 of the frame; ≤ 20 kept. White, black and grey paint cannot be detected.</dd>
+      <dt>Readout</dt><dd><code>last_frame</code>. Oracle ranked by <code>mean_iou</code>.</dd>
+    </dl>
+    <div class="formula">IoU matrix pred × truth → greedy one-to-one match by descending IoU (pairs with IoU 0 never match)
+mean_iou   = Σ matched IoU / max(n_pred, n_truth)          ← headline; unmatched masks on either side cost score
+matched_iou= Σ matched IoU / n_matched
+fg_iou     = IoU(∪pred, ∪truth)
+hit        = matched pair with IoU ≥ 0.5
+precision  = hits / n_pred     recall = hits / n_truth     f1
+pq         = Σ hit IoU / (hits + ½·FP + ½·FN)
+both sides empty → 1.0;  one side empty → 0</div>
+    <div class="callout"><strong>Pilot:</strong> n=17 (3 GT errors), invalid 35% (4 scene, 2 compliance). Readout 0.114, oracle 0.193, null 0.023. Valid-only mean is 0.168 (n=11) and invalid-only 0.017, so the gates do separate real failures here.</div>
+  </div>
+
+  <!-- T2 -->
+  <div class="probe">
+    <div class="probe-head">
+      <h3>Depth perception · <code>depth_perception</code></h3>
+      <div class="tags"><span class="chip c-todo">Scene</span><span class="chip c-warn">not discriminative yet</span></div>
+    </div>
+    <dl class="spec">
+      <dt>Ask</dt><dd>Replace the photograph with a grayscale depth map, near = bright and far = dark. No colormap.</dd>
+      <dt>Ground truth</dt><dd>Depth Anything 3 (<code>DA3-LARGE-1.1</code>), relative depth with larger values further away.</dd>
+      <dt>Extractor</dt><dd><code>gray_depth</code>: luminance after a 5 px median blur, depth = 1 − L, a 2nd–98th percentile clip, then rescaled to [0, 1].</dd>
+      <dt>Readout</dt><dd><code>most_static</code> over the last 2 s. Oracle ranked by <code>delta1</code>. Only the temporal gate applies.</dd>
+    </dl>
+    <div class="formula">valid = finite ∧ gt ∈ [0.001, 1000] ∧ pred ∈ [0.001, 1000]
+align (scale_shift): least-squares  pred' = a·pred + b  fitted to gt
+ratio   = max(pred'/gt, gt/pred')
+delta_k = mean(ratio &lt; 1.25^k), k = 1,2,3                ← delta1 headline
+abs_rel = mean|pred'−gt|/gt   sq_rel = mean (pred'−gt)²/gt   rmse   rmse_log
+silog   = 100·√(mean(d²) − mean(d)²),  d = log pred' − log gt</div>
+    <div class="callout bad"><strong>Problems.</strong>
+      (1) The input photo scores δ¹ 0.357 against Veo's 0.359. After an affine fit, δ¹ on a [0,1]-normalised field barely separates a depth map from scene luminance.
+      (2) Bright = near reads like inverse depth, but the fit is done in depth space. The usual MiDaS/DA convention is an affine fit in disparity.
+      (3) Latent bug: if the fit makes <code>pred'</code> negative, <code>ratio</code> is negative and counts as a δ hit, and the log terms become NaN. This did not occur in the pilot.
+      (4) The percentile clip sets the nearest ~2% of pixels to 0, and <code>pred ≥ 0.001</code> then drops them, so the closest surfaces are never scored (valid_frac 0.957).
+      (5) No gate checks that the output is actually a grayscale image.</div>
+    <div class="callout"><strong>Pilot:</strong> n=20, invalid 0%. δ¹ 0.359 → 0.400 oracle; δ² 0.653; δ³ 0.836; abs_rel 0.472; SILog 45.1.</div>
+  </div>
+
+  <!-- T5 -->
+  <div class="probe">
+    <div class="probe-head">
+      <h3>Active object detection · <code>active_object_detection</code></h3>
+      <div class="tags"><span class="chip c-todo">Interaction</span><span class="chip c-warn">overlaps T1</span></div>
+    </div>
+    <dl class="spec">
+      <dt>Ask</dt><dd>Mask <code>{relevant_objects}</code>, described as "the object the robot is currently acting on", in one flat saturated colour.</dd>
+      <dt>Ground truth</dt><dd>SAM 3 on <code>gt_prompt</code> (fallback "object"). Same thresholds as T1, but ≤ 4 instances.</dd>
+      <dt>Extractor</dt><dd><code>active_color_instances</code>, a copy of T1's decoder. ≤ 4 instances.</dd>
+      <dt>Readout</dt><dd><code>last_frame</code>. Oracle ranked by <code>mean_iou</code>.</dd>
+    </dl>
+    <div class="formula">All T1 mask metrics (same greedy matching, mean_iou headline), plus:
+centroid_hit = fraction of truth masks whose centroid pixel lies inside ∪pred   ← "did it mark the right object"</div>
+    <div class="callout"><strong>Problem.</strong> Semantics returns a target and a destination ("scissors" + "container"), and both feed <code>relevant_objects</code> and <code>gt_prompt</code>. Mean n_truth is 2.06, and the GT matches T1 exactly on 14 of 17 items. To measure the active object, both prompt and GT should use the <code>target</code> phrase only.</div>
+    <div class="callout"><strong>Pilot:</strong> n=17, invalid 29% (all scene preservation). mean IoU 0.088 → 0.143 oracle, null 0.023. centroid_hit 0.446 (oracle 0.461). Valid-only mean IoU 0.105.</div>
+  </div>
+
+  <!-- T6 -->
+  <div class="probe">
+    <div class="probe-head">
+      <h3>Robot keypoint detection · <code>robot_keypoint_detection</code></h3>
+      <div class="tags"><span class="chip c-todo">Robot state</span><span class="chip c-warn">metric inflated</span></div>
+    </div>
+    <dl class="spec">
+      <dt>Ask</dt><dd>A small, saturated dot on each rotating joint from base to gripper, each a different colour, and nothing else marked.</dd>
+      <dt>Ground truth</dt><dd>RoboPEPP (Panda, ViT-B, 224 px) produces 7 2D keypoints. Bbox from <code>robot_bbox</code> meta, else the full frame. Intrinsics from <code>intrinsics</code> meta, else f = 1.2·max(H,W) with a centred principal point. In the pilot, bbox = None and intrinsics were estimated.</dd>
+      <dt>Extractor</dt><dd><code>color_points</code>: saturated blobs with S ≥ 0.5, V ≥ 0.2 and area 8–20000 px. No palette, ≤ 32 points, centroids returned.</dd>
+      <dt>Readout</dt><dd><code>last_frame</code>. Oracle ranked by <code>pck</code>. Gate dilation is 25 px.</dd>
+    </dl>
+    <div class="formula">greedy one-to-one match by ascending pixel distance (no distance cap, no labels)
+τ    = 0.05 · image diagonal
+pck  = #matched with d ≤ τ / n_truth                 ← headline (= recall)
+precision = hits / n_pred     f1
+mean_dist = mean matched d / diagonal
+score = mean over truth of exp(−d_nearest / τ)      (soft, unmatched)</div>
+    <div class="callout bad"><strong>Problems.</strong> With no palette, any saturated scene object counts as a dot. The input frame alone yields about 24.5, and the output 27.5. Every one of the 7 GT joints gets matched to its nearest blob, so PCK rewards clutter. Clips that failed the gates score <em>higher</em> (0.286) than valid ones (0.253). Without labels the metric also cannot check which joint a dot belongs to. Separately, 12% of GT points lie outside the image.</div>
+    <div class="callout"><strong>Pilot:</strong> n=20, invalid 35% (all scene preservation). PCK 0.264 → 0.479 oracle, null 0.214. Precision 0.065. Mean distance 0.127 of the diagonal.</div>
+  </div>
+
+  <!-- T7 -->
+  <div class="probe">
+    <div class="probe-head">
+      <h3>Robot pose estimation · <code>robot_pose_estimation</code></h3>
+      <div class="tags"><span class="chip c-todo">Robot state</span><span class="chip c-warn">GT suspect</span></div>
+    </div>
+    <dl class="spec">
+      <dt>Ask</dt><dd>A red dot (<code>#e6194b</code>) on the gripper centre and a green dot (<code>#3cb44b</code>) a short fixed distance ahead of it along the pointing direction.</dd>
+      <dt>Ground truth</dt><dd>Two RoboPEPP keypoints, by default the last two: index 6 (end effector) and index 5 (the joint behind it). Same bbox and intrinsics defaults as T6.</dd>
+      <dt>Extractor</dt><dd><code>pose_points</code>: the largest blob near each palette colour (±22° hue), so the order is red then green.</dd>
+      <dt>Readout</dt><dd><code>last_frame</code>. Oracle ranked by <code>pose_score</code>.</dd>
+    </dl>
+    <div class="formula">pos_err   = ‖pred_red − gt_ee‖ / diagonal                     (1.0 if missing)
+θ         = angle between (green − red) and (gt_ref − gt_ee), folded: min(θ, 180°−θ) ∈ [0°, 90°]
+heading   = 1 − θ / 90°
+pose_score= exp(−pos_err / 0.05) × heading                      ← headline; 0 if either dot missing
+pos_pck   = 1[pos_err ≤ 0.05]</div>
+    <div class="callout bad"><strong>Problems.</strong> 10 of 20 GT poses have a point outside the frame (e.g. y = −251). The GT vector points backward (end effector → joint behind) while the prompt asks for a forward marker. That only works because the angle is folded, and the fold also means a heading drawn exactly backwards scores perfectly. Keypoints 6 and 5 are close together on a Panda, so the GT angle is noisy. With τ = 0.05 and mean pos_err 0.22, the position term is about 0.012, so <code>pose_score</code> is almost entirely a position measure.</div>
+    <div class="callout"><strong>Pilot:</strong> n=20, invalid 10%. pose_score 0.057 → 0.080 oracle, null 0.007. Angle error 50.7°, pos_err 0.220, pos_pck 0.10.</div>
+  </div>
+
+  <!-- T3 -->
+  <div class="probe">
+    <div class="probe-head">
+      <h3>Grasp region segmentation · <code>grasp_region_seg</code></h3>
+      <div class="tags"><span class="chip c-todo">Interaction</span><span class="chip c-bad">GT blocked</span></div>
+    </div>
+    <dl class="spec">
+      <dt>Ask</dt><dd>Paint the graspable part of <code>{relevant_objects}</code> in one flat saturated colour. Clips were generated in the pilot.</dd>
+      <dt>Ground truth</dt><dd>DA3 relative depth × <code>depth_scale</code> (1.0, a convention), back-projected with estimated intrinsics into a point cloud, z ∈ [0.05, 2.0] m. AnyGrasp then predicts up to 10 grasps, each projected as a 7 px line (or as points or a hull) to form a binary mask.</dd>
+      <dt>Extractor</dt><dd><code>color_mask</code>: S ≥ 0.6, V ≥ 0.2, any hue, cleanup 5 px, area 0.0005–0.9, union of all blobs.</dd>
+    </dl>
+    <div class="formula">iou (headline)   dice   precision   recall   f1
+boundary_f1 = F1 of 1-px outlines, each matched within a dilated (3 px) band of the other
+area_pred, area_gt  as frame fractions</div>
+    <div class="callout bad"><strong>Problems.</strong> No AnyGrasp licence or checkpoint (only <code>robopepp_panda.pt</code> is in <code>checkpoints/</code>), and the probe is excluded in <code>eval.robotrustbench.yaml</code>. The GT also covers the whole scene: it ignores <code>relevant_objects</code>, while the prompt asks only about task objects. That is the same scoping mismatch the README warns about elsewhere. AnyGrasp also expects metric XYZ, and scaled relative depth is not that.</div>
+  </div>
+</section>
+
+<!-- ============ RESULTS ============ -->
+<section>
+  <h2>Pilot results with the null baseline</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Task (headline)</th><th class="n">n</th><th class="n">Invalid</th><th class="n">Null</th><th class="n">Readout</th><th class="n">Oracle</th><th class="n">Valid-only</th><th>Gate failures</th></tr></thead>
+    <tbody>
+      <tr><td>Instance seg (mean IoU)</td><td class="n">17</td><td class="n">35%</td><td class="n">0.023</td><td class="n">0.114</td><td class="n">0.193</td><td class="n">0.168</td><td>4 scene, 2 compliance</td></tr>
+      <tr><td>Depth (δ¹)</td><td class="n">20</td><td class="n">0%</td><td class="n">0.357</td><td class="n">0.359</td><td class="n">0.400</td><td class="n">0.359</td><td>none</td></tr>
+      <tr><td>Active object (mean IoU)</td><td class="n">17</td><td class="n">29%</td><td class="n">0.023</td><td class="n">0.088</td><td class="n">0.143</td><td class="n">0.105</td><td>5 scene</td></tr>
+      <tr><td>Robot keypoints (PCK)</td><td class="n">20</td><td class="n">35%</td><td class="n">0.214</td><td class="n">0.264</td><td class="n">0.479</td><td class="n">0.253</td><td>7 scene</td></tr>
+      <tr><td>Robot pose (pose score)</td><td class="n">20</td><td class="n">10%</td><td class="n">0.007</td><td class="n">0.057</td><td class="n">0.080</td><td class="n">0.060</td><td>2 scene</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li><code>temporal_stability</code> never fired on any probe, and <code>scene_preservation</code> caused 20 of 22 gate failures. The thresholds have not been calibrated.</li>
+    <li>The 3 GT errors in T1 and T5 come from two pronoun instructions ("it") and an ungroundable "black hoodie". Entries in <code>configs/semantics_overrides.json</code>, a file the config references but that does not exist yet, could recover the two pronoun cases.</li>
+    <li>Per-scenario cells have n = 1–9, and Adversarial has n = 1. Do not draw conclusions across scenarios yet.</li>
+  </ul>
+</section>
+
+<!-- ============ NEXT STEPS ============ -->
+<section>
+  <h2>What to do next</h2>
+  <p>The midterm plan (curate, verify GT, finish tasks, freeze the pipeline, add models, analyse) still holds. The measurement fixes should come <em>first</em>, because they cost nothing to apply: the 120 clips and all GT are cached, so each fix is a re-score.</p>
+
+  <span class="phase-label">Fix the measurement (before adding data or models)</span>
+  <ol class="steps">
+    <li><div><strong>Add a null baseline to the report.</strong><span class="why">Score the conditioning frame, held still, through every probe and print it as a column beside readout and oracle. A result only counts once it beats this baseline. A per-frame null for the oracle would give an honest oracle gap.</span></div></li>
+    <li><div><strong>Keep only pixels the model changed.</strong><span class="why">Intersect the extractor input with |output − input| &gt; ε before colour decoding. This removes the scene's own saturated objects for T1, T5, T6 and T7, and does the job README's "Calibrating the extractor" section describes.</span></div></li>
+    <li><div><strong>Rework the keypoint metric.</strong><span class="why">Use Hungarian matching with a distance cap, make F1 (or PCK with a penalty for extra points) the headline, and add a fixed palette per joint so identity can be checked. Then decide whether the drift claim in the midterm holds up.</span></div></li>
+    <li><div><strong>Repair RoboPEPP GT.</strong><span class="why">Pass DROID's camera intrinsics and a robot bbox through manifest meta. Flag or drop off-frame points. Check which Panda keypoint indices give a meaningful heading. Make the GT direction match the prompt's forward marker and remove the 90° fold, or justify keeping it.</span></div></li>
+    <li><div><strong>Rework depth scoring.</strong><span class="why">Fit the affine alignment in disparity space, guard against non-positive aligned values, keep the nearest pixels, and add a rank metric (Spearman or ordinal error). Add a gate checking that the output is grayscale. Then check whether Veo beats the null at all.</span></div></li>
+    <li><div><strong>Separate active object from instance seg.</strong><span class="why">Give T5 the semantics <code>target</code> only, in both its prompt slot and its GT prompt. Optionally widen T1 to all objects on the table so the two tasks measure different things.</span></div></li>
+    <li><div><strong>Finish the gates and stats.</strong><span class="why">Report valid-only means and a per-gate breakdown (the midterm says this was not done), calibrate the thresholds on a labelled set of clips, and add bootstrap 95% CIs.</span></div></li>
+  </ol>
+
+  <span class="phase-label">Then the midterm plan</span>
+  <ol class="steps" start="8" style="counter-reset: s 7;">
+    <li><div><strong>Curate the benchmark subset and verify GT.</strong><span class="why">Choose items with a named target that SAM 3 can ground and on-frame RoboPEPP points, and review each GT preview <code>.png</code> by eye. Write <code>semantics_overrides.json</code>.</span></div></li>
+    <li><div><strong>Unblock grasp GT.</strong><span class="why">Choose AnyGrasp (licence) or an open model (GSNet, GraspGen, Contact-GraspNet). Scope the GT to the target's SAM 3 mask, and use metric depth if DROID provides it.</span></div></li>
+    <li><div><strong>Decide on contact detection.</strong><span class="why">DROID trajectories include gripper state, which RoboTrustBench drops. Join on <code>source_traj_id</code> to recover it, or cut the task.</span></div></li>
+    <li><div><strong>Add models.</strong><span class="why">Write <code>command</code> backends for Wan2.2 and HunyuanVideo, plus a non-Fast Veo 3.1, and test each with <code>limit: 1</code>. Freeze prompts, readouts and thresholds before the full run.</span></div></li>
+    <li><div><strong>Failure taxonomy and release (O4).</strong><span class="why">Use gate reasons, oracle frame indices and per-scenario splits as the raw material.</span></div></li>
+  </ol>
+</section>
+
+<!-- ============ BRIEF ============ -->
+<section>
+  <h2>Everything else, briefly</h2>
+  <div class="brief">
+    <div><h4>wmcore</h4><p>Shared registry (<code>@register</code>), plugin discovery via marker files, manifest schema, YAML config, video I/O, and <code>stratified_sample</code> (largest-remainder sampling by category).</p></div>
+    <div><h4>wmgen</h4><p>Frame sources, an optional <code>llm_slots</code> semantics stage (DeepSeek, cached per sample, overrides file), template prompts with <code>requires</code> checks, and backends <code>http_job</code>, <code>command</code> and <code>local_dir</code>. The clip store warns on prompt drift and never pays twice. Has a dry run. Runs serially with no resume.</p></div>
+    <div><h4>Backends</h4><p><code>veo3</code> (Gemini <code>predictLongRunning</code>, model <code>veo-3.1-fast-generate-preview</code>) and <code>local</code>. No open-weight backend yet.</p></div>
+    <div><h4>Data</h4><p><code>fetch_robotrustbench.py</code> pulls all 1,207 items into frames + <code>meta.yaml</code>. The pilot is fixed to 20 IDs in <code>configs/pilot_ids.txt</code> (9/6/4/1 across scenarios A–D).</p></div>
+    <div><h4>Per-probe tools</h4><p>Each module has <code>preview.py</code> (rebuild and view GT) and <code>scan.py</code> (per-frame score curve, readout vs oracle). Useful for the GT-verification step.</p></div>
+    <div><h4>Third party</h4><p><code>third_party/RoboPEPP</code> and <code>third_party/depth-anything-3</code> are vendored clones. Torch-heavy dependencies sit in each module's own <code>requirements.txt</code>.</p></div>
+    <div><h4>Code health</h4><p>No tests. Code is duplicated: the mask metric and colour decoder (T1/T5), the DA3 wrapper (T2/T3), and the 252-line RoboPEPP <code>model.py</code> (T6/T7). Moving them into a shared module would stop the copies drifting apart.</p></div>
+    <div><h4>Repo hygiene</h4><p>Commit soon: five modules and <code>gates.py</code> exist only on disk. LaTeX build files and PDFs sit in the repo root. Move them to <code>docs/</code> or add them to <code>.gitignore</code>.</p></div>
+  </div>
+</section>
+
+</div>

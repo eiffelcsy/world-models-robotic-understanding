@@ -1,0 +1,43 @@
+# R2: the robot stays where it is. Slot R.
+#
+# Diagnosis of the 2026-11-11 run: the commonest failure is that the robot arm moves.
+# On the spatial frame nearly every arm swings the robot down into the scene before
+# dotting it (several on goal too), so the dots sit on a new pose while the ground
+# truth is the input pose. The base's rest paragraph names the robot among things
+# that "remain the untouched original photograph" but never says it holds its pose.
+#
+# Word diff against base (the current best):
+#   The dots are the only thing that changes. {+The robot arm stays exactly where it
+#   is in the photograph, in the same pose; only the dots appear.+} The robot arm
+#   itself, ...
+#
+# Built from the base (kept 2026-11-11), one slot changed. The same sentence is
+# robot_pose_estimation R2 (docs/keypoint_prompt_ablations.md).
+description: "R2: base plus 'the robot arm stays exactly where it is'"
+prompt:
+  params:
+    text: |
+      This photograph stays exactly as it is: same framing, same lighting, same
+      shadows, same photographic texture and grain. Nothing in it is redrawn,
+      restyled, simplified, flattened or re-lit. The scene geometry also stays
+      the same — no objects are added, removed or changed in any way.
+
+      The camera is locked off on a tripod and does not move, pan, zoom or
+      shake. Nothing in the scene moves.
+
+      One at a time, a small, bright, fully saturated circular dot appears on
+      each joint of the robot arm — the rotating joints where one rigid link
+      meets the next, from the base all the way to the gripper. Each dot is a
+      different vivid color, sits exactly on its joint, and is small: a compact
+      circle a few pixels across, not a line, not a ring, not an arrow, not a
+      label. There is one dot per joint and nothing else is marked.
+
+      The dots are the only thing that changes. The robot arm stays exactly where it is in the
+      photograph, in the same pose; only the dots appear. The robot arm itself, every
+      object in the scene, the table, the floor and the background all remain
+      the untouched original photograph.
+
+      All dots are in place by {settle_s} seconds into the clip, after which the
+      frame is completely still for the remainder of the {duration_s} seconds.
+      Static locked-off camera, one continuous shot, no cut, no zoom, no pan,
+      no dolly, no camera shake, no text, no labels, no outlines, no watermark.

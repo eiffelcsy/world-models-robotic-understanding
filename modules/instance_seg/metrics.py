@@ -165,7 +165,7 @@ def score_masks(
 
     both_empty = n_pred == 0 and n_truth == 0
     largest = max(n_pred, n_truth)
-    quality = sum(hits) + 0.5 * (n_pred - len(hits)) + 0.5 * (n_truth - len(hits))
+    quality = len(hits) + 0.5 * (n_pred - len(hits)) + 0.5 * (n_truth - len(hits))
     precision = _ratio(len(hits), n_pred, empty=n_truth == 0)
     recall = _ratio(len(hits), n_truth, empty=n_pred == 0)
 

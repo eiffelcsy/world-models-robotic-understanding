@@ -1,0 +1,42 @@
+# K1: the shared core. Slots P, C and H together, plus the change to prose.
+#
+# One step, as for grasp: P, C and H are the core wording shared word for word by
+# the overlay probes, measured one at a time on the segmentation path. Adds the
+# base's preservation and camera paragraphs and its hold paragraph, which replaces
+# "Static camera perspective, no zoom or pan." The text is now the base, byte for
+# byte (checked); only the negatives differ.
+#
+# Bridging path, adapted Wiedemer et al. (2025) keypoint prompt -> our base:
+# paper -> R1 -> T1 -> E1 -> K1 -> base. Each arm is the previous one with one change.
+# The base was written by design; this path measures each change afterwards
+# (docs/keypoint_prompt_ablations.md).
+#
+# No negatives. The next step, `base` (prompt.yaml), adds them (slot N).
+description: "K1: the shared core (P, C, H) and prose form; text equals the base"
+prompt:
+  params:
+    text: |
+      This photograph stays exactly as it is: same framing, same lighting, same
+      shadows, same photographic texture and grain. Nothing in it is redrawn,
+      restyled, simplified, flattened or re-lit. The scene geometry also stays
+      the same — no objects are added, removed or changed in any way.
+
+      The camera is locked off on a tripod and does not move, pan, zoom or
+      shake. Nothing in the scene moves.
+
+      One at a time, a small, bright, fully saturated circular dot appears on
+      each joint of the robot arm — the rotating joints where one rigid link
+      meets the next, from the base all the way to the gripper. Each dot is a
+      different vivid color, sits exactly on its joint, and is small: a compact
+      circle a few pixels across, not a line, not a ring, not an arrow, not a
+      label. There is one dot per joint and nothing else is marked.
+
+      The dots are the only thing that changes. The robot arm itself, every
+      object in the scene, the table, the floor and the background all remain
+      the untouched original photograph.
+
+      All dots are in place by {settle_s} seconds into the clip, after which the
+      frame is completely still for the remainder of the {duration_s} seconds.
+      Static locked-off camera, one continuous shot, no cut, no zoom, no pan,
+      no dolly, no camera shake, no text, no labels, no outlines, no watermark.
+    negative: ""

@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
+from wmcore.arms import BASE, deep_merge, load_arm, run_manifest, run_subdir
 from wmcore.config import read_yaml, resolver, root_of
 from wmcore.modules import discover
 
@@ -37,6 +38,7 @@ class PromptConfig:
     description: str = ""
     source: Path | None = None
     meta: dict[str, Any] = field(default_factory=dict)
+    arm: str = BASE
 
 
 @dataclass
@@ -69,11 +71,23 @@ class GenConfig:
     dry_run: bool = False
     refresh: bool = False
     root: Path = Path(".")
+    #: The prompt arm and repeat this run generates (wmcore/arms.py). Clips go to
+    #: `<clips_dir>/<probe>/<arm>/r<repeat>/`, reports to `<output_dir>/<arm>/r<repeat>/`.
+    arm: str = BASE
+    repeat: int = 0
+    #: The backend seed is `seed_base + repeat`, the same for every arm. None = no seed.
+    seed_base: int | None = 0
 
 
-def load_prompt_config(module_dir: Path) -> PromptConfig:
+def load_prompt_config(module_dir: Path, arm: str = BASE) -> PromptConfig | None:
+    """A probe's prompt config with `arm` merged over it; None if it has no such arm."""
     path = module_dir / PROMPT_FILE
     raw = read_yaml(path)
+    overrides = load_arm(module_dir, arm)
+    if overrides is None:
+        return None
+    raw = {**raw, "prompt": deep_merge(raw.get("prompt") or {}, overrides.get("prompt") or {}),
+           "video": deep_merge(raw.get("video") or {}, overrides.get("video") or {})}
     if "prompt" not in raw:
         raise ValueError(f"{path}: prompt config is missing 'prompt'")
     return PromptConfig(
@@ -86,6 +100,7 @@ def load_prompt_config(module_dir: Path) -> PromptConfig:
         description=raw.get("description", ""),
         source=path,
         meta=raw.get("meta") or {},
+        arm=arm,
     )
 
 
@@ -147,19 +162,27 @@ def load_semantics_spec(
     return spec
 
 
-def load_gen_config(path: str | Path) -> GenConfig:
+def load_gen_config(path: str | Path, arm: str | None = None, repeat: int | None = None) -> GenConfig:
+    """The run config; `arm` and `repeat` override the YAML's (the CLI's --arm, --repeat)."""
     path = Path(path).resolve()
     raw = read_yaml(path)
+    arm = arm if arm is not None else str(raw.get("arm", BASE))
+    repeat = int(repeat if repeat is not None else raw.get("repeat", 0))
     root = root_of(path, raw)
     resolve = resolver(root)
 
     modules_dir = resolve(raw.get("modules_dir", "modules"))
     backends_dir = resolve(raw.get("backends_dir", "backends"))
     selection = raw.get("modules") or {}
+    # A probe with no file for this arm is not part of the run.
     prompts = [
-        load_prompt_config(module_dir)
+        config
         for module_dir in discover(modules_dir, PROMPT_FILE, selection.get("include"), selection.get("exclude"))
+        if (config := load_prompt_config(module_dir, arm)) is not None
     ]
+    if not prompts:
+        raise ValueError(f"{path}: no selected probe has an arm named {arm!r} (modules/<probe>/arms/{arm}.yaml)")
+    seed_base = raw.get("seed_base", 0)
 
     if "frames" not in raw:
         raise ValueError(f"{path}: no `frames` block; it says where the conditioning frames come from")
@@ -171,10 +194,10 @@ def load_gen_config(path: str | Path) -> GenConfig:
         backend=load_backend_config(backends_dir, raw["backend"], resolve),
         prompts=prompts,
         clips_dir=resolve(raw.get("clips_dir", "clips")),
-        output_dir=resolve(raw.get("output_dir", "results/gen")),
+        output_dir=resolve(raw.get("output_dir", "results/gen")) / run_subdir(arm, repeat),
         modules_dir=modules_dir,
         backends_dir=backends_dir,
-        manifest_out=resolve(raw.get("manifest_out", "configs/manifest.yaml")),
+        manifest_out=run_manifest(resolve(raw.get("manifest_out", "configs/manifest.yaml")), arm, repeat),
         semantics=load_semantics_spec(raw.get("semantics"), resolve),
         semantics_dir=resolve(raw.get("semantics_dir", "semantics")),
         video=raw.get("video") or {},
@@ -185,6 +208,9 @@ def load_gen_config(path: str | Path) -> GenConfig:
         dry_run=bool(raw.get("dry_run", False)),
         refresh=bool(raw.get("refresh", False)),
         root=root,
+        arm=arm,
+        repeat=repeat,
+        seed_base=None if seed_base is None else int(seed_base),
     )
 
 
@@ -195,4 +221,5 @@ def video_params(config: GenConfig, prompt: PromptConfig) -> dict[str, Any]:
     its prompt depends on (a duration its text names); the run config overrides
     everything, so a smoke run can shorten every clip without editing a probe.
     """
-    return {**config.backend.defaults, **prompt.video, **config.video}
+    seed = {} if config.seed_base is None else {"seed": config.seed_base + config.repeat}
+    return {**config.backend.defaults, **seed, **prompt.video, **config.video}

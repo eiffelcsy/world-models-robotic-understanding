@@ -16,6 +16,7 @@ import time
 from pathlib import Path
 
 from wmcore import registry
+from wmcore.arms import run_subdir
 from wmcore.modules import import_module
 from wmcore.utils import ensure_dir, stratified_sample
 
@@ -55,6 +56,7 @@ def run(config: GenConfig) -> list[Clip]:
         semantics_dir=ensure_dir(config.semantics_dir) if config.semantics else None,
         refresh=config.refresh,
         dry_run=config.dry_run,
+        clip_subdir=run_subdir(config.arm, config.repeat),
     )
 
     frames: list[Frame] = list(registry.build("source", config.frames)(ctx))
@@ -72,6 +74,8 @@ def run(config: GenConfig) -> list[Clip]:
         first = slot_failures[0]
         raise RuntimeError(f"semantics/{first['sample_id']}: {first['error']}")
 
+    log.info("arm %s, repeat %d, seed %s", config.arm, config.repeat,
+             "none" if config.seed_base is None else config.seed_base + config.repeat)
     log.info(
         "%d frames x %d probes = %d clips%s via %s",
         len(frames),

@@ -1,0 +1,42 @@
+# T2: how big the mark is. Slot T (extent).
+#
+# Painting the whole object scores 0 (tightness), and a half-size disk on the
+# object's centre scores 0.34 on frames whose grasp is off-centre (README), so the
+# mark must be small and placed. Says what size it is, rather than what to avoid.
+#
+# Word diff against base:
+#   ...and sits precisely on its outline. {+It is a small patch, about the width
+#   of a gripper finger, where the fingers would touch the object.+} It is one
+#   flat, ...
+#
+# Improvement arm, built from the base prompt (prompt.yaml), one slot changed.
+# A hypothesis to run alongside the base (docs/grasp_prompt_ablations.md).
+description: "T2: base plus a size anchor for the mask"
+prompt:
+  params:
+    text: |
+      This photograph stays exactly as it is: same framing, same lighting, same
+      shadows, same photographic texture and grain. Nothing in it is redrawn,
+      restyled, simplified, flattened or re-lit. The scene geometry also stays
+      the same — no objects are added, removed or changed in any way.
+
+      The camera is locked off on a tripod and does not move, pan, zoom or
+      shake. Nothing in the scene moves.
+
+      An opaque colored mask appears on top of the graspable part of
+      {grasp_object} — the region of the object that a robot gripper would
+      close around to pick it up. The mask covers only that graspable region,
+      not the whole object, and sits precisely on its outline.
+      It is a small patch, about the width of a gripper finger, where the fingers
+      would touch the object. It is one flat,
+      fully saturated color, with no shading, gradient or texture. Once it has
+      appeared it stays unchanged for the rest of the clip.
+
+      Everything not covered by the mask remains the untouched original
+      photograph: the rest of the object, every other object in the scene, the
+      robot arm, the table surface, the floor and the background.
+
+      The mask is in place by {settle_s} seconds into the clip, after which the
+      frame is completely still for the remainder of the {duration_s} seconds.
+      Static locked-off camera, one continuous shot, no cut, no zoom, no pan,
+      no dolly, no camera shake, no text, no labels, no outlines, no watermark.

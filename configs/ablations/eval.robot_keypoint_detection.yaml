@@ -1,0 +1,13 @@
+# Prompt-ablation eval config for robot_keypoint_detection: the 4 LIBERO tune frames, seed 0, this probe only.
+# Run every arm with scripts/run_ablations.sh robot_keypoint_detection <arm> ... (docs/prompt_framework.md).
+root: ../..
+manifest: results/ablations/robot_keypoint_detection/manifest.yaml
+output_dir: results/ablations/robot_keypoint_detection/eval
+gt_dir: results/libero
+modules_dir: modules
+modules:
+  include:
+  - robot_keypoint_detection
+  exclude: []
+limit: null
+fail_fast: false

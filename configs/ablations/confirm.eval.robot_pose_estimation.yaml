@@ -1,0 +1,13 @@
+# Held-out confirmation eval config for robot_pose_estimation (scores --repeat 1).
+# Base against the final prompt, paired by frame (docs/prompt_framework.md, step 6).
+root: ../..
+manifest: results/confirmation/robot_pose_estimation/libero/manifest.yaml
+output_dir: results/confirmation/robot_pose_estimation/libero/eval
+gt_dir: results/libero
+modules_dir: modules
+modules:
+  include:
+  - robot_pose_estimation
+  exclude: []
+limit: null
+fail_fast: false

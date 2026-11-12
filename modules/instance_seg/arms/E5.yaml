@@ -1,0 +1,45 @@
+# E5: call the answer "paint", never "mask". Built from H1.
+#
+# Targets a wording failure seen in E4: on libero_goal the model drew a literal
+# green face mask in place of the wine bottle. Every prompt so far names the
+# answer "mask", a word that is also an object. E5 replaces that one term
+# everywhere it appears (5 places) with "paint" / "layer of paint", and changes
+# nothing else. Slot: E, since it is the name of the answer's form; the
+# replacements fall in the T, R and H sentences only because the term recurs there.
+#
+# Word diff against H1:
+#   an opaque [-mask-] {+layer of paint+} in one flat, fully saturated color ...
+#   no [-mask-] {+paint+} is white, black or grey. Each [-mask-] {+layer of paint+} spreads ...
+#   Once [-a mask-] {+the paint+} has appeared ...
+#   Everything not covered by [-a mask-] {+paint+} remains ...
+#   All [-masks are-] {+the paint is+} in place by ...
+description: E5, H1 with "mask" replaced by "paint" throughout
+prompt:
+  params:
+    text: |
+      This photograph stays exactly as it is: same framing, same lighting, same
+      shadows, same photographic texture and grain. Nothing in it is redrawn,
+      restyled, simplified, flattened or re-lit. The scene geometry also stays
+      the same — no objects are added, removed or changed in any way.
+
+      The camera is locked off on a tripod and does not move, pan, zoom or
+      shake. Nothing in the scene moves.
+
+      One at a time, in immediate succession, an opaque layer of paint in one flat, fully
+      saturated color appears on top of each of these objects — {relevant_objects}
+      — lying directly over that object and covering it exactly. Each object gets
+      a different color, and no paint is white, black or grey. Each layer of paint spreads outward from
+      inside the object until its edge sits precisely on that object's outline,
+      then stops, including at thin parts, handles and holes. Once the paint has
+      appeared, it stays unchanged for the rest of the clip: the same fully
+      saturated color, with no fading, darkening or shading, up to the very last frame.
+
+      Everything not covered by paint remains the untouched original
+      photograph: every other object in the scene, the robot arm, the table
+      surface, the floor, the walls, the background, and the shadows objects
+      cast onto that surface.
+
+      All the paint is in place by {settle_s} seconds into the clip, after which the
+      frame is completely still for the remainder of the {duration_s} seconds.
+      Static locked-off camera, one continuous shot, no cut, no zoom, no pan,
+      no dolly, no camera shake, no text, no labels, no outlines, no watermark.

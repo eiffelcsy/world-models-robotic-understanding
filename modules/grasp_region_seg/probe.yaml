@@ -1,0 +1,60 @@
+name: grasp_region_seg
+description: >
+  The graspable region of the object to pick up, painted in one flat color.
+  Ground truth is the grasp recorded in the demonstration, on the exact mask of
+  the object it picked from a simulator replay (LIBERO only); the model never
+  sees either.
+
+enabled: true
+
+level: Interaction
+# grasp_loc replaced grasp_score as the headline on 2026-11-11, chosen on synthetic
+# answers only, before any held-out grasp clip (docs/grasp_prompt_ablations.md, "Metric revision").
+headline: grasp_loc
+
+gates:
+  - {type: scene_preservation, params: {max_change: 0.15, dilate: 5}}
+  # Same floor as the decoder, so a mark the decoder reads is never "nothing marked".
+  - {type: instruction_compliance, params: {min_area_frac: 0.0001, max_area_frac: 0.9}}
+  - {type: temporal_stability, params: {window_s: 1.0, stride: 2, max_diff: 10.0}}
+
+readout:
+  type: last_frame
+  params:
+    back_off: 1
+
+best_frame:
+  enabled: true
+  rank_by: grasp_loc
+  stride: 1
+  start_index: 5
+
+ground_truth:
+  type: demonstrated_grasp
+  params:
+    tolerance_m: 0.02       # a painted pixel this close to the grasp is a hit
+    max_object_gap_m: 0.03  # how far the grasp may sit from the object mask
+
+extractor:
+  type: color_mask
+  params:
+    min_saturation: 0.6
+    min_value: 0.2
+    hue: null               # null -> keep any saturated color
+    hue_tolerance: 25.0
+    min_change: 40.0        # a painted pixel must differ from the input frame
+    cleanup: 5
+    # Lower than the other probes. 0.0002 (184 px) dropped a finger-wide (1 cm radius)
+    # mark drawn on the demonstrated grasp on 5 of 20 frames after blur and cleanup;
+    # 0.0001 (92 px) reads all 20 and still finds no paint on untouched frames
+    # (0/20) or on frame 0 of any grasp clip (0/45). Changed 2026-11-11.
+    min_area_frac: 0.0001
+    max_area_frac: 0.9
+    largest_only: false
+
+metrics:
+  - type: grasp_hit
+    params:
+      focus_m: 0.04         # painted pixels should sit this close to the grasp
+      free_coverage: 0.5    # paint up to this share of the object at no penalty
+      object_dilate: 5

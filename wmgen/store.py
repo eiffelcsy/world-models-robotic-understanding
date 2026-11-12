@@ -4,8 +4,11 @@ A generated clip is the expensive artefact of this pipeline the way SAM 3 output
 is wmeval's, so the caching contract is deliberately the same one
 (`wmeval.components.GroundTruthSource`):
 
-    <clips_dir>/<probe>/<sample_id>.mp4    the video wmeval will score
-    <clips_dir>/<probe>/<sample_id>.json   what was asked for to get it
+    <clips_dir>/<probe>/<arm>/r<repeat>/<sample_id>.mp4    the video wmeval will score
+    <clips_dir>/<probe>/<arm>/r<repeat>/<sample_id>.json   what was asked for to get it
+
+Each prompt arm and repeat has its own folder (wmcore/arms.py), so a prompt edit
+within one arm is the only way a stored clip can drift from its prompt.
 
 A clip that is there is not generated again. Nothing about the prompt is in the
 filename, so a stored clip survives an edit to `prompt.yaml` rather than being

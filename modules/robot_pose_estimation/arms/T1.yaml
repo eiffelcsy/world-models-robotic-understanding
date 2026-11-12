@@ -1,0 +1,29 @@
+# T1: where the two dots go. Slot T.
+#
+# Replaces the one-line placement with the base's three target sentences: the
+# framing sentence ("marking the orientation of its gripper"), the red dot ("on the
+# center of the gripper, right at the point the gripper would close on an object")
+# and the green dot paragraph ("just beyond the tips of the two gripper fingers...",
+# the base's wording since the 2026-11-11 fix).
+#
+# Word diff against R1 (abridged):
+#   Add a bright red dot {+and a bright green dot on the robot arm, marking the
+#   orientation of its gripper. The first dot is red. It sits exactly+} on the
+#   center of the [-robot's-]{+gripper, right at the point the+} gripper [-and a
+#   bright green-]{+would close on an object. The second+} dot ... {+just beyond the
+#   tips of the two gripper fingers, about a finger's length past them, on the
+#   straight line that runs from the back of the gripper through the middle of the
+#   fingertips.+}
+#
+# Bridging path, Wiedemer et al. (2025) Fig. 12 adapted to pose -> our base:
+# paper -> R1 -> T1 -> E1 -> K1 -> base. Each arm is the previous one with one change.
+# The base was written by design; this path measures each change afterwards
+# (docs/pose_prompt_ablations.md).
+#
+# No negatives.
+description: "T1: the base's red and green dot placement"
+prompt:
+  params:
+    text: |
+      Add a bright red dot and a bright green dot on the robot arm, marking the orientation of its gripper. The first dot is red. It sits exactly on the center of the gripper, right at the point the gripper would close on an object. The second dot is green. It sits just beyond the tips of the two gripper fingers, about a finger's length past them, on the straight line that runs from the back of the gripper through the middle of the fingertips. They are the only thing that changes: the robot arm, every object in the scene, the table, the floor and the background all remain the untouched original photograph. Static camera perspective, no zoom or pan.
+    negative: ""

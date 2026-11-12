@@ -1,5 +1,10 @@
 # Veo 3 through the Gemini API, as a generic HTTP job.
 #
+# SHUT DOWN: the Gemini API's Veo 3.1 preview models, including the one below,
+# were shut down on 2026-10-22 (https://aistudio.google.com/docs/video). Use
+# backends/veo31_vertex. Kept because the existing RoboTrustBench clips were made
+# with it, and their sidecars name it.
+#
 # Nothing about Veo is in wmgen's Python — this file is the whole integration,
 # and pointing the pipeline at a different vendor is writing a different one of
 # these. Strings anywhere below are templated with the request: {prompt},

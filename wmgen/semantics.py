@@ -71,6 +71,10 @@ no location clause. "blue marker", not "the blue marker on the table".
 it to pick the object out.
 - It is passed straight to an open-vocabulary image segmenter, so it must name \
 something with a visible outline. Never a region, a side, or an action.
+- Prefer the shortest concrete common noun the instruction supports: "towel" \
+over "paper towel", "roll" over "roll of tape". Never a pronoun or demonstrative \
+("it", "them", "this") and never an abstract or spatial noun ("area", "pile", \
+"spot", "side") — a segmenter cannot ground any of them.
 - Name what the instruction says even when it sounds impossible or absent from \
 a plausible scene. You are recording the instruction, not judging it.
 

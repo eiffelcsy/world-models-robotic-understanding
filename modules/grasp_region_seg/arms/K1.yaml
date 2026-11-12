@@ -1,0 +1,45 @@
+# K1: the shared core. Slots P, C and H together, plus the change to prose.
+#
+# One step instead of three, deliberately: P, C and H are the core wording shared
+# word for word by the overlay probes, and their effects were already measured one
+# at a time on the segmentation bridging path (P1, C1, H2 there). Here they enter
+# as one block. Replaces the "Create an animation..." framing, the "starts from the
+# unaltered photograph" and "static scene" bullets and the Camera list with the
+# base's preservation, camera and hold paragraphs, and adds "Once it has appeared it
+# stays unchanged for the rest of the clip." The text is now the base, byte for
+# byte; only the negatives differ.
+#
+# Bridging path, adapted Wiedemer et al. (2025) segmentation prompt -> our base:
+# paper -> R1 -> T1 -> E1 -> K1 -> base. Each arm is the previous one with one change.
+# The base was written from the segmentation prompt by design; this path measures
+# each change afterwards (docs/grasp_prompt_ablations.md).
+#
+# No negatives. The next step, `base` (prompt.yaml), adds them (slot N).
+description: "K1: the shared core (P, C, H) and prose form; text equals the base"
+prompt:
+  params:
+    text: |
+      This photograph stays exactly as it is: same framing, same lighting, same
+      shadows, same photographic texture and grain. Nothing in it is redrawn,
+      restyled, simplified, flattened or re-lit. The scene geometry also stays
+      the same — no objects are added, removed or changed in any way.
+
+      The camera is locked off on a tripod and does not move, pan, zoom or
+      shake. Nothing in the scene moves.
+
+      An opaque colored mask appears on top of the graspable part of
+      {grasp_object} — the region of the object that a robot gripper would
+      close around to pick it up. The mask covers only that graspable region,
+      not the whole object, and sits precisely on its outline. It is one flat,
+      fully saturated color, with no shading, gradient or texture. Once it has
+      appeared it stays unchanged for the rest of the clip.
+
+      Everything not covered by the mask remains the untouched original
+      photograph: the rest of the object, every other object in the scene, the
+      robot arm, the table surface, the floor and the background.
+
+      The mask is in place by {settle_s} seconds into the clip, after which the
+      frame is completely still for the remainder of the {duration_s} seconds.
+      Static locked-off camera, one continuous shot, no cut, no zoom, no pan,
+      no dolly, no camera shake, no text, no labels, no outlines, no watermark.
+    negative: ""

@@ -1,0 +1,39 @@
+# E10: near and far anchored to surfaces in the scene. Slot E.
+#
+# Aimed at the clay render and, as a side effect, at the white objects added near the
+# camera (24/60 clips): the brightest thing must now be an existing surface.
+# Names generic surfaces, since the object suite shows a floor, not a table.
+#
+# Word diff against base:
+#   Depth is shown only as brightness and nothing else. [-Surfaces-] {+The surface
+#   along the bottom edge of the image,+} closest to the [-camera are-] {+camera, is+}
+#   the brightest — near white. ... grading smoothly to black at the [-far end-]
+#   {+wall at the back+} of the scene.
+#
+# Improvement arm, built from the base prompt (prompt.yaml), one slot changed.
+# Written 2026-11-10 after the first depth run's diagnosis (docs/depth_prompt_ablations.md).
+description: base with near and far anchored to surfaces in the scene
+prompt:
+  params:
+    text: |
+      This photograph becomes a single grayscale depth map of exactly the same
+      scene, from exactly the same camera position: same framing, same field of
+      view, same geometry. Every surface keeps its shape and outline. Nothing is
+      added or removed.
+
+      Depth is shown only as brightness and nothing else. The surface along the
+      bottom edge of the image, closest to the camera, is the brightest — near
+      white. Surfaces further away are darker, grading smoothly to black at the
+      wall at the back of the scene. A surface at one
+      distance is one flat shade everywhere it appears.
+
+      The image is completely grayscale. There is no color anywhere, no red or
+      green or blue tint, no colormap, no rainbow, no red-to-blue scale. There
+      are no edges, no outlines, no text, no labels, no numbers, no arrows, no
+      shading detail, no texture, no highlights, no reflections: only smooth
+      brightness that encodes distance.
+
+      The camera is locked off on a tripod and does not move, pan, zoom or
+      shake. The depth map is fully formed by {settle_s} seconds and then holds
+      completely still for the rest of the {duration_s} seconds. One continuous
+      shot, no cut.

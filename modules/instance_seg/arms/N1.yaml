@@ -1,0 +1,12 @@
+# N1: our negative list added; identical to the base prompt (prompt.yaml).
+#
+# Bridging path, Wiedemer et al. (2025) -> our base prompt: paper -> F1 -> T2 -> R1 -> E6 -> H2
+# -> P1 -> C1 -> N1 (= base). Each arm is the previous one with one change. The base was
+# adapted from the paper's prompt by design; this path measures each change afterwards
+# (docs/segmentation_prompt_ablations.md).
+#
+# Slot changed: N.
+#
+# Word diff against C1:
+#   (text unchanged; negative: "" -> the base's negative list)
+description: "N1: our negative list added; identical to the base prompt (prompt.yaml)"

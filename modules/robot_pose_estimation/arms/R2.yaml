@@ -1,0 +1,46 @@
+# R2: the robot stays where it is. Slot R.
+#
+# Diagnosis of the 2026-11-11 run: on the spatial frame every arm except `paper`
+# brings the gripper down into the scene before drawing the dots, so position is lost
+# (the ground truth is the input pose). The same failure as the keypoint probe's,
+# and the same sentence as robot_keypoint_detection R2.
+#
+# Word diff against T3 (the current best):
+#   ...no labels, no text. {+The robot arm stays exactly where it is in the
+#   photograph, in the same pose; only the dots appear.+} They are the only thing
+#   that changes: ...
+#
+# Built from T3 (adopted 2026-11-11), one slot changed (docs/pose_prompt_ablations.md).
+description: "R2: T3 plus 'the robot arm stays exactly where it is'"
+prompt:
+  params:
+    text: |
+      This photograph stays exactly as it is: same framing, same lighting, same
+      shadows, same photographic texture and grain. Nothing in it is redrawn,
+      restyled, simplified, flattened or re-lit. The scene geometry also stays
+      the same — no objects are added, removed or changed in any way.
+
+      The camera is locked off on a tripod and does not move, pan, zoom or
+      shake. Nothing in the scene moves.
+
+      Two small, bright, fully saturated circular dots appear on the robot arm,
+      marking the orientation of its gripper.
+
+      The first dot is red. It sits exactly between the
+      two fingertips, midway between them, where a held object would be.
+
+      The second dot is green. It sits just beyond the tips of the two gripper
+      fingers, about a finger's length past them, on the straight line that
+      runs from the back of the gripper through the middle of the fingertips.
+
+      Both dots are small compact circles a few pixels across — no lines, no
+      arrows, no rings, no labels, no text. The robot arm stays exactly where it is in the
+      photograph, in the same pose; only the dots appear. They are the only thing
+      that changes: the robot arm, every object in the scene, the table, the floor
+      and the background all remain the untouched original photograph.
+
+      The two dots are in place by {settle_s} seconds into the clip, after which
+      the frame is completely still for the remainder of the {duration_s}
+      seconds. Static locked-off camera, one continuous shot, no cut, no zoom,
+      no pan, no dolly, no camera shake, no text, no labels, no outlines, no
+      watermark.

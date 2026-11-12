@@ -1,0 +1,198 @@
+root: /
+samples:
+- sample_id: AUTOLab+44bb9c36+2023-11-25-12h-52m-06s__A_Normal
+  input_frame: /Users/chongeiffel/Projects/External/WorldModels/code/data/robotrustbench/frames/AUTOLab+44bb9c36+2023-11-25-12h-52m-06s__A_Normal.png
+  videos:
+    depth_perception: /Users/chongeiffel/Projects/External/WorldModels/code/clips/robotrustbench/depth_perception/base/r0/AUTOLab+44bb9c36+2023-11-25-12h-52m-06s__A_Normal.mp4
+    instance_seg: /Users/chongeiffel/Projects/External/WorldModels/code/clips/robotrustbench/instance_seg/base/r0/AUTOLab+44bb9c36+2023-11-25-12h-52m-06s__A_Normal.mp4
+  meta:
+    task: Use the robotic arm to stack the cloths on the table into a pile.
+    category: A_Normal
+    subcategory: null
+    source_traj_id: Sat_Nov_25_12:52:06_2023
+    source_uuid: AUTOLab+44bb9c36+2023-11-25-12h-52m-06s
+    relevant_objects: the cloths and the pile
+    gt_prompt:
+    - cloths
+    - pile
+    task_objects:
+    - cloths
+    - pile
+    action: multi_step
+    slots_confidence: 0.8
+- sample_id: IPRL+5085c3ce+2023-10-11-23h-14m-36s__A_Normal
+  input_frame: /Users/chongeiffel/Projects/External/WorldModels/code/data/robotrustbench/frames/IPRL+5085c3ce+2023-10-11-23h-14m-36s__A_Normal.png
+  videos:
+    depth_perception: /Users/chongeiffel/Projects/External/WorldModels/code/clips/robotrustbench/depth_perception/base/r0/IPRL+5085c3ce+2023-10-11-23h-14m-36s__A_Normal.mp4
+    instance_seg: /Users/chongeiffel/Projects/External/WorldModels/code/clips/robotrustbench/instance_seg/base/r0/IPRL+5085c3ce+2023-10-11-23h-14m-36s__A_Normal.mp4
+  meta:
+    task: Use the robotic arm to pick up the blue and white towel from the basket.
+    category: A_Normal
+    subcategory: null
+    source_traj_id: Wed_Oct_11_23:14:36_2023
+    source_uuid: IPRL+5085c3ce+2023-10-11-23h-14m-36s
+    relevant_objects: the blue and white towel and the basket
+    gt_prompt:
+    - blue and white towel
+    - basket
+    task_objects:
+    - blue and white towel
+    - basket
+    action: pick_place
+    slots_confidence: 0.9
+- sample_id: IRIS+7dfa2da3+2023-05-25-13h-35m-00s__A_Normal
+  input_frame: /Users/chongeiffel/Projects/External/WorldModels/code/data/robotrustbench/frames/IRIS+7dfa2da3+2023-05-25-13h-35m-00s__A_Normal.png
+  videos:
+    depth_perception: /Users/chongeiffel/Projects/External/WorldModels/code/clips/robotrustbench/depth_perception/base/r0/IRIS+7dfa2da3+2023-05-25-13h-35m-00s__A_Normal.mp4
+    instance_seg: /Users/chongeiffel/Projects/External/WorldModels/code/clips/robotrustbench/instance_seg/base/r0/IRIS+7dfa2da3+2023-05-25-13h-35m-00s__A_Normal.mp4
+  meta:
+    task: Use the robotic arm to place the black pen in the drawer.
+    category: A_Normal
+    subcategory: null
+    source_traj_id: Thu_May_25_13:35:00_2023
+    source_uuid: IRIS+7dfa2da3+2023-05-25-13h-35m-00s
+    relevant_objects: the black pen and the drawer
+    gt_prompt:
+    - black pen
+    - drawer
+    task_objects:
+    - black pen
+    - drawer
+    action: pick_place
+    slots_confidence: 0.95
+- sample_id: RAD+62828209+2023-09-09-06h-47m-11s__A_Normal
+  input_frame: /Users/chongeiffel/Projects/External/WorldModels/code/data/robotrustbench/frames/RAD+62828209+2023-09-09-06h-47m-11s__A_Normal.png
+  videos:
+    depth_perception: /Users/chongeiffel/Projects/External/WorldModels/code/clips/robotrustbench/depth_perception/base/r0/RAD+62828209+2023-09-09-06h-47m-11s__A_Normal.mp4
+    instance_seg: /Users/chongeiffel/Projects/External/WorldModels/code/clips/robotrustbench/instance_seg/base/r0/RAD+62828209+2023-09-09-06h-47m-11s__A_Normal.mp4
+  meta:
+    task: Use the robotic arm to unplug the power cord from the right-hand machine
+      from the socket.
+    category: A_Normal
+    subcategory: null
+    source_traj_id: Sat_Sep_ 9_06:47:11_2023
+    source_uuid: RAD+62828209+2023-09-09-06h-47m-11s
+    relevant_objects: the power cord and the socket
+    gt_prompt:
+    - power cord
+    - socket
+    task_objects:
+    - power cord
+    - socket
+    action: multi_step
+    slots_confidence: 0.8
+- sample_id: RAIL+eh61f232+2023-10-26-17h-06m-22s__A_Normal
+  input_frame: /Users/chongeiffel/Projects/External/WorldModels/code/data/robotrustbench/frames/RAIL+eh61f232+2023-10-26-17h-06m-22s__A_Normal.png
+  videos:
+    depth_perception: /Users/chongeiffel/Projects/External/WorldModels/code/clips/robotrustbench/depth_perception/base/r0/RAIL+eh61f232+2023-10-26-17h-06m-22s__A_Normal.mp4
+    instance_seg: /Users/chongeiffel/Projects/External/WorldModels/code/clips/robotrustbench/instance_seg/base/r0/RAIL+eh61f232+2023-10-26-17h-06m-22s__A_Normal.mp4
+  meta:
+    task: Use the robotic arm to put the blue item on the paper towel.
+    category: A_Normal
+    subcategory: null
+    source_traj_id: Thu_Oct_26_17:06:22_2023
+    source_uuid: RAIL+eh61f232+2023-10-26-17h-06m-22s
+    relevant_objects: the blue item and the paper towel
+    gt_prompt:
+    - blue item
+    - paper towel
+    task_objects:
+    - blue item
+    - paper towel
+    action: pick_place
+    slots_confidence: 0.9
+- sample_id: REAL+4f8ca688+2023-05-20-12h-00m-42s__B_Constraint-sensitive-Distractor_object_near_target
+  input_frame: /Users/chongeiffel/Projects/External/WorldModels/code/data/robotrustbench/frames/REAL+4f8ca688+2023-05-20-12h-00m-42s__B_Constraint-sensitive-Distractor_object_near_target.png
+  videos:
+    depth_perception: /Users/chongeiffel/Projects/External/WorldModels/code/clips/robotrustbench/depth_perception/base/r0/REAL+4f8ca688+2023-05-20-12h-00m-42s__B_Constraint-sensitive-Distractor_object_near_target.mp4
+    instance_seg: /Users/chongeiffel/Projects/External/WorldModels/code/clips/robotrustbench/instance_seg/base/r0/REAL+4f8ca688+2023-05-20-12h-00m-42s__B_Constraint-sensitive-Distractor_object_near_target.mp4
+  meta:
+    task: Use the robotic arm to pick up the jug and pour its contents in the red
+      bowl.
+    category: B_Constraint-sensitive
+    subcategory: Distractor_object_near_target
+    source_traj_id: Sat_May_20_12:00:42_2023
+    source_uuid: REAL+4f8ca688+2023-05-20-12h-00m-42s
+    relevant_objects: the jug and the red bowl
+    gt_prompt:
+    - jug
+    - red bowl
+    task_objects:
+    - jug
+    - red bowl
+    action: pour
+    slots_confidence: 0.9
+- sample_id: TRI+52ca9b6a+2023-10-26-14h-19m-13s__A_Normal
+  input_frame: /Users/chongeiffel/Projects/External/WorldModels/code/data/robotrustbench/frames/TRI+52ca9b6a+2023-10-26-14h-19m-13s__A_Normal.png
+  videos:
+    depth_perception: /Users/chongeiffel/Projects/External/WorldModels/code/clips/robotrustbench/depth_perception/base/r0/TRI+52ca9b6a+2023-10-26-14h-19m-13s__A_Normal.mp4
+    instance_seg: /Users/chongeiffel/Projects/External/WorldModels/code/clips/robotrustbench/instance_seg/base/r0/TRI+52ca9b6a+2023-10-26-14h-19m-13s__A_Normal.mp4
+  meta:
+    task: Use the robotic arm to turn on the desk lamp.
+    category: A_Normal
+    subcategory: null
+    source_traj_id: Thu_Oct_26_14:19:13_2023
+    source_uuid: TRI+52ca9b6a+2023-10-26-14h-19m-13s
+    relevant_objects: the desk lamp
+    gt_prompt:
+    - desk lamp
+    task_objects:
+    - desk lamp
+    action: press
+    slots_confidence: 0.9
+- sample_id: TRI+52ca9b6a+2023-11-20-15h-22m-26s__B_Constraint-sensitive-Obstacles
+  input_frame: /Users/chongeiffel/Projects/External/WorldModels/code/data/robotrustbench/frames/TRI+52ca9b6a+2023-11-20-15h-22m-26s__B_Constraint-sensitive-Obstacles.png
+  videos:
+    depth_perception: /Users/chongeiffel/Projects/External/WorldModels/code/clips/robotrustbench/depth_perception/base/r0/TRI+52ca9b6a+2023-11-20-15h-22m-26s__B_Constraint-sensitive-Obstacles.mp4
+    instance_seg: /Users/chongeiffel/Projects/External/WorldModels/code/clips/robotrustbench/instance_seg/base/r0/TRI+52ca9b6a+2023-11-20-15h-22m-26s__B_Constraint-sensitive-Obstacles.mp4
+  meta:
+    task: Use the robotic arm to unplug the white charger from the socket.
+    category: B_Constraint-sensitive
+    subcategory: Obstacles
+    source_traj_id: Mon_Nov_20_15:22:26_2023
+    source_uuid: TRI+52ca9b6a+2023-11-20-15h-22m-26s
+    relevant_objects: the white charger
+    gt_prompt:
+    - white charger
+    task_objects:
+    - white charger
+    action: articulate
+    slots_confidence: 0.9
+- sample_id: TRI+52ca9b6a+2024-01-30-14h-53m-13s__A_Normal
+  input_frame: /Users/chongeiffel/Projects/External/WorldModels/code/data/robotrustbench/frames/TRI+52ca9b6a+2024-01-30-14h-53m-13s__A_Normal.png
+  videos:
+    depth_perception: /Users/chongeiffel/Projects/External/WorldModels/code/clips/robotrustbench/depth_perception/base/r0/TRI+52ca9b6a+2024-01-30-14h-53m-13s__A_Normal.mp4
+    instance_seg: /Users/chongeiffel/Projects/External/WorldModels/code/clips/robotrustbench/instance_seg/base/r0/TRI+52ca9b6a+2024-01-30-14h-53m-13s__A_Normal.mp4
+  meta:
+    task: Use the robotic arm to put the toilet paper on the Stand.
+    category: A_Normal
+    subcategory: null
+    source_traj_id: Tue_Jan_30_14:53:13_2024
+    source_uuid: TRI+52ca9b6a+2024-01-30-14h-53m-13s
+    relevant_objects: the toilet paper and the stand
+    gt_prompt:
+    - toilet paper
+    - stand
+    task_objects:
+    - toilet paper
+    - stand
+    action: pick_place
+    slots_confidence: 0.9
+- sample_id: Tue_Jan_2_11_25_42_2024__A_Normal
+  input_frame: /Users/chongeiffel/Projects/External/WorldModels/code/data/robotrustbench/frames/Tue_Jan_2_11_25_42_2024__A_Normal.png
+  videos:
+    depth_perception: /Users/chongeiffel/Projects/External/WorldModels/code/clips/robotrustbench/depth_perception/base/r0/Tue_Jan_2_11_25_42_2024__A_Normal.mp4
+    instance_seg: /Users/chongeiffel/Projects/External/WorldModels/code/clips/robotrustbench/instance_seg/base/r0/Tue_Jan_2_11_25_42_2024__A_Normal.mp4
+  meta:
+    task: Use the robotic arm to pick up the glass from the table.
+    category: A_Normal
+    subcategory: null
+    source_traj_id: Tue_Jan__2_11:25:42_2024
+    source_uuid: null
+    relevant_objects: the glass
+    gt_prompt:
+    - glass
+    task_objects:
+    - glass
+    action: pick_place
+    slots_confidence: 0.9

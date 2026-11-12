@@ -1,0 +1,36 @@
+# Held-out confirmation gen config for grasp_region_seg: the 16 LIBERO test frames, seed 1 (--repeat 1).
+# Base against the final prompt, paired by frame (docs/prompt_framework.md, step 6).
+root: ../..
+frames:
+  type: frames_dir
+  params:
+    path: ./data/libero/frames
+    pattern: '*.png'
+    meta_file: ./data/libero/meta.yaml
+    include: ./configs/libero_test_ids.txt
+semantics:
+  type: cached
+  params:
+    overrides: configs/semantics_overrides.json
+semantics_dir: semantics/libero
+backend: omni12
+arm: base
+repeat: 0
+seed_base: 0
+clips_dir: clips/libero
+output_dir: results/confirmation/grasp_region_seg/libero/gen
+manifest_out: results/confirmation/grasp_region_seg/libero/manifest.yaml
+modules_dir: modules
+backends_dir: backends
+modules:
+  include:
+  - grasp_region_seg
+  exclude: []
+video:
+  duration_s: 6
+limit: null
+limit_by: null
+limit_seed: 0
+dry_run: false
+refresh: false
+fail_fast: false

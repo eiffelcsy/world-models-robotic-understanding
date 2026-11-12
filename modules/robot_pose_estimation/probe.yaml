@@ -1,0 +1,51 @@
+name: robot_pose_estimation
+description: >
+  The robot's end-effector and its heading, drawn as two colored markers. Ground
+  truth is the end-effector pose the simulator recorded, projected with the
+  render's camera (LIBERO only); the model never sees it.
+
+enabled: true
+
+level: Robot State
+headline: pose_score
+
+gates:
+  - {type: scene_preservation, params: {max_change: 0.15, dilate: 25}}
+  - {type: instruction_compliance, params: {min_points: 2}}
+  - {type: temporal_stability, params: {window_s: 1.0, stride: 2, max_diff: 10.0}}
+
+readout:
+  type: last_frame
+  params:
+    back_off: 1
+
+best_frame:
+  enabled: true
+  rank_by: pose_score
+  stride: 1
+  start_index: 5
+
+ground_truth:
+  type: recorded_pose
+  params:
+    heading_distance: 0.08   # metres ahead of the grip point along the approach axis
+
+extractor:
+  type: pose_points
+  params:
+    # The two colors the prompt asks for, in order: center then heading.
+    palette: ["#e6194b", "#3cb44b"]
+    hue_tolerance: 22.0
+    min_saturation: 0.5
+    min_value: 0.2
+    cleanup: 3
+    min_area: 8
+    max_area: 20000
+    min_change: 40.0        # dot pixels must differ from the input frame (as grasp's
+                            # color_mask); added 2026-11-11, saturated scene objects decoded as dots
+    max_points: 2
+
+metrics:
+  - type: pose_metrics
+    params:
+      pos_threshold_frac: 0.05

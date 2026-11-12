@@ -1,0 +1,19 @@
+# T1: what to mark. Slot T.
+#
+# Word diff against R1:
+#   ...on each joint of the robot [-arm.-]{+arm — the rotating joints where one rigid
+#   link meets the next, from the base all the way to the gripper. Each dot sits
+#   exactly on its joint. There is one dot per joint and nothing else is marked.+}
+#
+# Bridging path, adapted Wiedemer et al. (2025) keypoint prompt -> our base:
+# paper -> R1 -> T1 -> E1 -> K1 -> base. Each arm is the previous one with one change.
+# The base was written by design; this path measures each change afterwards
+# (docs/keypoint_prompt_ablations.md).
+#
+# No negatives.
+description: "T1: the base's definition of a joint, one dot per joint"
+prompt:
+  params:
+    text: |
+      Add a bright dot of a different color on each joint of the robot arm — the rotating joints where one rigid link meets the next, from the base all the way to the gripper. Each dot sits exactly on its joint. There is one dot per joint and nothing else is marked. The dots are the only thing that changes. The robot arm itself, every object in the scene, the table, the floor and the background all remain the untouched original photograph. Static camera perspective, no zoom or pan.
+    negative: ""

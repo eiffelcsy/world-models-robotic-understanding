@@ -49,7 +49,8 @@ modules_dir: modules
 backends_dir: backends
 modules:
   include: ["*"]   # name globs, e.g. ["instance_seg"]
-  exclude: []      # or set `enabled: false` in a module's prompt.yaml
+  # Their ground truth comes from a simulator replay; LIBERO only.
+  exclude: ["robot_keypoint_detection", "robot_pose_estimation", "grasp_region_seg"]
 
 # Run-level override of what to ask for, highest precedence of the three
 # (backend defaults < prompt.yaml < here). Shorten every clip for a smoke run:
